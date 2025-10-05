@@ -17,6 +17,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaGithub } from 'react-icons/fa';
 import { HiUpload } from 'react-icons/hi';
+import { getAspectRatio } from './util';
 
 function App() {
     const [rows, setRows] = useState(4);
@@ -25,6 +26,9 @@ function App() {
     const [color, setColor] = useState('#00ff00');
     const [diagonals, setDiagonals] = useState(false);
     const [image, setImage] = useState<HTMLImageElement | null>(null);
+    const [aspectRatio, setAspectRatio] = useState<ReturnType<
+        typeof getAspectRatio
+    > | null>(null);
     const [innerWidth, setInnerWidth] = useState(window.innerHeight);
     const [innerHeight, setInnerHeight] = useState(window.innerHeight);
     const [filename, setFilename] = useState('');
@@ -139,16 +143,74 @@ function App() {
                     processing happens right in your browser.
                 </Text>
                 <FileUpload.Root
-                    accept={['image/png']}
+                    accept={[
+                        'image/png',
+                        'image/jpeg',
+                        'image/webp',
+                        'image/heic',
+                    ]}
                     onFileChange={(e) => {
+                        const file = e.acceptedFiles[0];
+                        if (!file) return;
+
+                        setFilename(file.name);
+
                         const reader = new FileReader();
-                        reader.onload = function (ev) {
+                        reader.onload = (ev) => {
+                            const result = ev.target?.result;
+                            if (!result) return;
+
                             const img = new Image();
-                            img.src = ev.target?.result as string;
-                            setImage(img);
+                            img.onload = () => {
+                                setImage(img);
+                                const aspectRatio = getAspectRatio(
+                                    img.naturalWidth,
+                                    img.naturalHeight,
+                                );
+                                const {
+                                    widthComponent,
+                                    heightComponent,
+                                    factorFound,
+                                } = aspectRatio;
+                                const multiplier = Math.max(
+                                    1,
+                                    Math.ceil(
+                                        img.naturalWidth /
+                                            aspectRatio.widthComponent /
+                                            200,
+                                    ),
+                                    Math.ceil(
+                                        img.naturalHeight /
+                                            aspectRatio.heightComponent /
+                                            200,
+                                    ),
+                                );
+                                if (factorFound) {
+                                    // e.g. 1:1, 4:5, 16:9
+                                    setColumns(
+                                        Math.max(
+                                            widthComponent * multiplier,
+                                            4,
+                                        ),
+                                    );
+                                    setRows(
+                                        Math.max(
+                                            heightComponent * multiplier,
+                                            4,
+                                        ),
+                                    );
+                                } else {
+                                    // e.g. 1:1.01, 1:3.14
+                                    setColumns(4);
+                                    setRows(4);
+                                }
+                                setAspectRatio(aspectRatio);
+                            };
+                            img.onerror = () =>
+                                console.error('Failed to load image');
+                            img.src = result as string;
                         };
-                        reader.readAsDataURL(e.acceptedFiles[0]);
-                        setFilename(e.acceptedFiles[0].name);
+                        reader.readAsDataURL(file);
                     }}
                 >
                     <FileUpload.HiddenInput />
@@ -173,6 +235,12 @@ function App() {
                             <Stat.Label>Width</Stat.Label>
                             <Stat.ValueText>
                                 {image.naturalWidth}px
+                            </Stat.ValueText>
+                        </Stat.Root>
+                        <Stat.Root>
+                            <Stat.Label>Aspect ratio</Stat.Label>
+                            <Stat.ValueText>
+                                {aspectRatio?.label}
                             </Stat.ValueText>
                         </Stat.Root>
                     </HStack>
