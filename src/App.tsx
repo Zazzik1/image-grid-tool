@@ -377,7 +377,7 @@ function App() {
                 position="fixed"
                 bottom="0"
                 right="0"
-                href="https://github.com/Zazzik1/Mandelbrot"
+                href="https://github.com/Zazzik1/image-grid-tool"
                 target="_blank"
                 rel="noopener noreferrer"
             >
