@@ -4,7 +4,7 @@ A simple way to add grids to images.
 
 ### 🔗 Try it here
 
-👉 [Open the tool](https://zazzik1.github.io/grid-image-tool/)
+👉 [Open the tool](https://zazzik1.github.io/image-grid-tool/)
 
 ### Preview
 
