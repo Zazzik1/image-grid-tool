@@ -9,10 +9,10 @@ export function getAspectRatio(
     heightComponent: number;
     factorFound: boolean;
 } {
-    const target = (width / height).toFixed(2);
+    const target = (width / height).toFixed(3);
     for (let i = 0; i < MAX_ASPECT_RATIO_N; i++) {
         for (let j = 0; j < MAX_ASPECT_RATIO_N; j++) {
-            if ((j / i).toFixed(2) === target) {
+            if ((j / i).toFixed(3) === target) {
                 return {
                     label: `${j}:${i}`,
                     widthComponent: j,
