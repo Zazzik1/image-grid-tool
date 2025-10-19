@@ -14,16 +14,17 @@ import {
     Stat,
     Text,
 } from '@chakra-ui/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FaGithub } from 'react-icons/fa';
 import { HiUpload } from 'react-icons/hi';
 import { getAspectRatio } from './util';
+import CroppingTool from './components/CroppingTool';
 
 function App() {
     const [rows, setRows] = useState(4);
     const [columns, setColumns] = useState(4);
     const [lineThickness, setLineThickness] = useState(1);
-    const [color, setColor] = useState('#00ff00');
+    const [color, setColor] = useState('#ffffff');
     const [diagonals, setDiagonals] = useState(false);
     const [image, setImage] = useState<HTMLImageElement | null>(null);
     const [aspectRatio, setAspectRatio] = useState<ReturnType<
@@ -43,6 +44,11 @@ function App() {
         link.href = canvasRef.current.toDataURL('image/png', 1.0);
         link.click();
     }, [filename]);
+
+    const handleCropSave = useCallback((image: HTMLImageElement) => {
+        setImage(image);
+        setAspectRatio(getAspectRatio(image.width, image.height));
+    }, []);
 
     useEffect(() => {
         const handler = () => {
@@ -109,6 +115,18 @@ function App() {
             }
         }
     }, [rows, columns, color, lineThickness, diagonals, image]);
+    const pxPerColumn = useMemo(
+        () => (image ? Math.round(image.naturalWidth / columns) : 1),
+        [image, columns],
+    );
+    const pxPerRow = useMemo(
+        () => (image ? Math.round(image.naturalHeight / rows) : 1),
+        [image, rows],
+    );
+    const cellAspectRatio = useMemo(
+        () => getAspectRatio(pxPerColumn, pxPerRow).label,
+        [pxPerColumn, pxPerRow],
+    );
     return (
         <HStack
             padding="0 8px"
@@ -142,87 +160,96 @@ function App() {
                     Don't worry - your image stays on your device. All
                     processing happens right in your browser.
                 </Text>
-                <FileUpload.Root
-                    accept={[
-                        'image/png',
-                        'image/jpeg',
-                        'image/webp',
-                        'image/heic',
-                    ]}
-                    onFileChange={(e) => {
-                        const file = e.acceptedFiles[0];
-                        if (!file) return;
+                <HStack>
+                    <FileUpload.Root
+                        width="max-content"
+                        accept={[
+                            'image/png',
+                            'image/jpeg',
+                            'image/webp',
+                            'image/heic',
+                        ]}
+                        onFileChange={(e) => {
+                            const file = e.acceptedFiles[0];
+                            if (!file) return;
 
-                        setFilename(file.name);
+                            setFilename(file.name);
 
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                            const result = ev.target?.result;
-                            if (!result) return;
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                                const result = ev.target?.result;
+                                if (!result) return;
 
-                            const img = new Image();
-                            img.onload = () => {
-                                setImage(img);
-                                const aspectRatio = getAspectRatio(
-                                    img.naturalWidth,
-                                    img.naturalHeight,
-                                );
-                                const {
-                                    widthComponent,
-                                    heightComponent,
-                                    factorFound,
-                                } = aspectRatio;
-                                const multiplier = Math.max(
-                                    1,
-                                    Math.ceil(
-                                        img.naturalWidth /
-                                            aspectRatio.widthComponent /
-                                            200,
-                                    ),
-                                    Math.ceil(
-                                        img.naturalHeight /
-                                            aspectRatio.heightComponent /
-                                            200,
-                                    ),
-                                );
-                                if (factorFound) {
-                                    // e.g. 1:1, 4:5, 16:9
-                                    setColumns(
-                                        Math.max(
-                                            widthComponent * multiplier,
-                                            4,
+                                const img = new Image();
+                                img.onload = () => {
+                                    setImage(img);
+                                    const aspectRatio = getAspectRatio(
+                                        img.naturalWidth,
+                                        img.naturalHeight,
+                                    );
+                                    const {
+                                        widthComponent,
+                                        heightComponent,
+                                        factorFound,
+                                    } = aspectRatio;
+                                    const multiplier = Math.max(
+                                        1,
+                                        Math.ceil(
+                                            img.naturalWidth /
+                                                aspectRatio.widthComponent /
+                                                200,
+                                        ),
+                                        Math.ceil(
+                                            img.naturalHeight /
+                                                aspectRatio.heightComponent /
+                                                200,
                                         ),
                                     );
-                                    setRows(
-                                        Math.max(
-                                            heightComponent * multiplier,
-                                            4,
-                                        ),
-                                    );
-                                } else {
-                                    // e.g. 1:1.01, 1:3.14
-                                    setColumns(4);
-                                    setRows(4);
-                                }
-                                setAspectRatio(aspectRatio);
+                                    if (factorFound) {
+                                        // e.g. 1:1, 4:5, 16:9
+                                        setColumns(
+                                            Math.max(
+                                                widthComponent * multiplier,
+                                                4,
+                                            ),
+                                        );
+                                        setRows(
+                                            Math.max(
+                                                heightComponent * multiplier,
+                                                4,
+                                            ),
+                                        );
+                                    } else {
+                                        // e.g. 1:1.01, 1:3.14
+                                        setColumns(4);
+                                        setRows(4);
+                                    }
+                                    setAspectRatio(aspectRatio);
+                                };
+                                img.onerror = () =>
+                                    console.error('Failed to load image');
+                                img.src = result as string;
                             };
-                            img.onerror = () =>
-                                console.error('Failed to load image');
-                            img.src = result as string;
-                        };
-                        reader.readAsDataURL(file);
-                    }}
-                >
-                    <FileUpload.HiddenInput />
-                    <FileUpload.Trigger asChild>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                        >
-                            <HiUpload /> Load image
-                        </Button>
-                    </FileUpload.Trigger>
-                </FileUpload.Root>
+                            reader.readAsDataURL(file);
+                        }}
+                    >
+                        <FileUpload.HiddenInput />
+                        <FileUpload.Trigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                            >
+                                <HiUpload /> Load image
+                            </Button>
+                        </FileUpload.Trigger>
+                    </FileUpload.Root>
+                    {image && (
+                        <CroppingTool
+                            image={image}
+                            onSave={handleCropSave}
+                        />
+                    )}
+                </HStack>
                 {image && (
                     <HStack>
                         <Stat.Root>
@@ -251,24 +278,27 @@ function App() {
                 >
                     2. Adjust the grid for your needs
                 </Heading>
-                <HStack>
+                <HStack gap={4}>
                     <Field.Root width="max-content">
                         <Field.Label>Number of rows</Field.Label>
                         <NumberInput.Root
                             maxW="200px"
                             value={rows.toString()}
                             min={1}
-                            onValueChange={(e: { valueAsNumber: number }) =>
-                                setRows(e.valueAsNumber)
-                            }
+                            onValueChange={(e: { valueAsNumber: number }) => {
+                                const value = e.valueAsNumber;
+                                if (Number.isNaN(value) || value < 0)
+                                    return setRows(1);
+                                setRows(value);
+                            }}
                         >
                             <NumberInput.Control />
                             <NumberInput.Input />
                         </NumberInput.Root>
                         {image && (
                             <Field.HelperText>
-                                {Math.round(image.naturalHeight / rows)}px per
-                                row ({(Math.round(1000 / rows) / 10).toFixed(1)}
+                                {pxPerRow}px per row (
+                                {(Math.round(1000 / rows) / 10).toFixed(1)}
                                 %)
                             </Field.HelperText>
                         )}
@@ -279,23 +309,32 @@ function App() {
                             maxW="200px"
                             value={columns.toString()}
                             min={1}
-                            onValueChange={(e: { valueAsNumber: number }) =>
-                                setColumns(e.valueAsNumber)
-                            }
+                            onValueChange={(e: { valueAsNumber: number }) => {
+                                const value = e.valueAsNumber;
+                                if (Number.isNaN(value) || value < 0)
+                                    return setColumns(1);
+                                setColumns(value);
+                            }}
                         >
                             <NumberInput.Control />
                             <NumberInput.Input />
                         </NumberInput.Root>
                         {image && (
                             <Field.HelperText>
-                                {Math.round(image.naturalWidth / columns)}px per
-                                column (
+                                {pxPerColumn}px per column (
                                 {(Math.round(1000 / columns) / 10).toFixed(1)}%)
                             </Field.HelperText>
                         )}
                     </Field.Root>
+                    <Stat.Root>
+                        <Stat.Label>Cell aspect ratio</Stat.Label>
+                        <Stat.ValueText>{cellAspectRatio}</Stat.ValueText>
+                    </Stat.Root>
                 </HStack>
-                <HStack alignItems="end">
+                <HStack
+                    gap={4}
+                    alignItems="end"
+                >
                     <Field.Root width="max-content">
                         <Field.Label>Line thickness</Field.Label>
                         <NumberInput.Root
@@ -367,7 +406,7 @@ function App() {
                 height="600"
                 ref={canvasRef}
                 style={{
-                    border: '1px solid #00ff0032',
+                    border: '1px solid #333333',
                     maxWidth: `calc(${innerWidth}px - 200px)`,
                     maxHeight: `calc(${innerHeight}px - 32px)`,
                     margin: '12px',
