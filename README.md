@@ -8,4 +8,4 @@ A simple way to add grids to images.
 
 ### Preview
 
-<img width="1914" height="896" alt="Image Grid Tool preview" src="https://github.com/user-attachments/assets/206779ed-d68e-4ca5-a34b-458fc3a98bff" />
+<img width="1919" height="903" alt="Image" src="https://github.com/user-attachments/assets/1194c378-fcb8-4112-b84d-d787858ac86e" />
