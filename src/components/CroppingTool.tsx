@@ -117,13 +117,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             startPoint.x,
                             startPoint.y,
                             endPoint.x - startPoint.x,
-                            (endPoint?.y ??
-                                (aspectRatio.force
-                                    ? (aspectRatio.heightComponent /
-                                          aspectRatio.widthComponent) *
-                                          (x - startPoint.x) +
-                                      startPoint.y
-                                    : y)) - startPoint.y,
+                            endPoint.y - startPoint.y,
                         );
                     }
                     const onMouseDown = (e: MouseEvent) => {
