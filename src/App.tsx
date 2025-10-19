@@ -45,10 +45,34 @@ function App() {
         link.click();
     }, [filename]);
 
-    const handleCropSave = useCallback((image: HTMLImageElement) => {
-        setImage(image);
-        setAspectRatio(getAspectRatio(image.width, image.height));
+    const suggestGrids = useCallback((img: HTMLImageElement) => {
+        const aspectRatio = getAspectRatio(img.naturalWidth, img.naturalHeight);
+        const { widthComponent, heightComponent, factorFound } = aspectRatio;
+        const multiplier = Math.max(
+            1,
+            Math.ceil(img.naturalWidth / aspectRatio.widthComponent / 200),
+            Math.ceil(img.naturalHeight / aspectRatio.heightComponent / 200),
+        );
+        if (factorFound) {
+            // e.g. 1:1, 4:5, 16:9
+            setColumns(Math.max(widthComponent * multiplier, 4));
+            setRows(Math.max(heightComponent * multiplier, 4));
+        } else {
+            // e.g. 1:1.01, 1:3.14
+            setColumns(4);
+            setRows(4);
+        }
+        setAspectRatio(aspectRatio);
     }, []);
+
+    const handleCropSave = useCallback(
+        (image: HTMLImageElement) => {
+            setImage(image);
+            setAspectRatio(getAspectRatio(image.width, image.height));
+            suggestGrids(image);
+        },
+        [suggestGrids],
+    );
 
     useEffect(() => {
         const handler = () => {
@@ -183,48 +207,7 @@ function App() {
                                 const img = new Image();
                                 img.onload = () => {
                                     setImage(img);
-                                    const aspectRatio = getAspectRatio(
-                                        img.naturalWidth,
-                                        img.naturalHeight,
-                                    );
-                                    const {
-                                        widthComponent,
-                                        heightComponent,
-                                        factorFound,
-                                    } = aspectRatio;
-                                    const multiplier = Math.max(
-                                        1,
-                                        Math.ceil(
-                                            img.naturalWidth /
-                                                aspectRatio.widthComponent /
-                                                200,
-                                        ),
-                                        Math.ceil(
-                                            img.naturalHeight /
-                                                aspectRatio.heightComponent /
-                                                200,
-                                        ),
-                                    );
-                                    if (factorFound) {
-                                        // e.g. 1:1, 4:5, 16:9
-                                        setColumns(
-                                            Math.max(
-                                                widthComponent * multiplier,
-                                                4,
-                                            ),
-                                        );
-                                        setRows(
-                                            Math.max(
-                                                heightComponent * multiplier,
-                                                4,
-                                            ),
-                                        );
-                                    } else {
-                                        // e.g. 1:1.01, 1:3.14
-                                        setColumns(4);
-                                        setRows(4);
-                                    }
-                                    setAspectRatio(aspectRatio);
+                                    suggestGrids(img);
                                 };
                                 img.onerror = () =>
                                     console.error('Failed to load image');
