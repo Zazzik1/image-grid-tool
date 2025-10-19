@@ -129,27 +129,22 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             (e.offsetY * canvasOverlay.height) /
                                 +canvasOverlay.style.height.split('px')[0],
                         );
-                        /**
-                         * (endPoint?.y ??
-                                    (aspectRatio.force
-                                        ? (aspectRatio.heightComponent /
-                                              aspectRatio.widthComponent) *
-                                              (x - startPoint.x) +
-                                          startPoint.y
-                                        : y)) - startPoint.y,
-                         */
                         if (!startPoint && !endPoint) {
                             setStartPoint({ x, y });
                         }
                         if (startPoint && !endPoint) {
+                            const y =
+                                (aspectRatio.heightComponent /
+                                    aspectRatio.widthComponent) *
+                                    (x - startPoint.x) +
+                                startPoint.y;
                             if (aspectRatio.force) {
                                 setEndPoint({
                                     x,
                                     y:
-                                        (aspectRatio.heightComponent /
-                                            aspectRatio.widthComponent) *
-                                            (x - startPoint.x) +
-                                        startPoint.y,
+                                        y <= canvasOverlay.height
+                                            ? y
+                                            : canvasOverlay.height,
                                 });
                             } else {
                                 setEndPoint({ x, y });
