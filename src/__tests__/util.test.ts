@@ -70,4 +70,28 @@ describe('getAspectRatio', () => {
             (result.widthComponent / result.heightComponent).toFixed(2),
         ).toBe((primeA / primeB).toFixed(2));
     });
+    it('853:1280 -> 2:3', () => {
+        expect(getAspectRatio(853, 1280)).toStrictEqual<Result>({
+            factorFound: true,
+            label: '2:3',
+            widthComponent: 2,
+            heightComponent: 3,
+        });
+    });
+    it.skip('1200:801 -> 3:2  (TODO: known issue)', () => {
+        expect(getAspectRatio(1200, 801)).toStrictEqual<Result>({
+            factorFound: true,
+            label: '3:2',
+            widthComponent: 3,
+            heightComponent: 2,
+        });
+    });
+    it.skip('862:1080 -> 5:4  (TODO: known issue)', () => {
+        expect(getAspectRatio(862, 1080)).toStrictEqual<Result>({
+            factorFound: true,
+            label: '4:5',
+            widthComponent: 4,
+            heightComponent: 5,
+        });
+    });
 });
