@@ -17,7 +17,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FaGithub } from 'react-icons/fa';
 import { HiUpload } from 'react-icons/hi';
-import { getAspectRatio } from './util';
+import { getAspectRatio, getGridSuggestion } from './util';
 import CroppingTool from './components/CroppingTool';
 
 function App() {
@@ -46,23 +46,13 @@ function App() {
     }, [filename]);
 
     const suggestGrids = useCallback((img: HTMLImageElement) => {
-        const aspectRatio = getAspectRatio(img.naturalWidth, img.naturalHeight);
-        const { widthComponent, heightComponent, factorFound } = aspectRatio;
-        const multiplier = Math.max(
-            1,
-            Math.ceil(img.naturalWidth / aspectRatio.widthComponent / 200),
-            Math.ceil(img.naturalHeight / aspectRatio.heightComponent / 200),
-        );
-        if (factorFound) {
-            // e.g. 1:1, 4:5, 16:9
-            setColumns(Math.max(widthComponent * multiplier, 4));
-            setRows(Math.max(heightComponent * multiplier, 4));
-        } else {
-            // e.g. 1:1.01, 1:3.14
-            setColumns(4);
-            setRows(4);
-        }
+        const {
+            aspectRatio,
+            grid: { columns, rows },
+        } = getGridSuggestion(img);
         setAspectRatio(aspectRatio);
+        setRows(rows);
+        setColumns(columns);
     }, []);
 
     const handleCropSave = useCallback(
