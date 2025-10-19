@@ -339,7 +339,9 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                     <Checkbox.HiddenInput />
                                     <Checkbox.Control />
                                     <Checkbox.Label>
-                                        Force aspect ratio X:Y
+                                        Force aspect ratio X:Y (
+                                        {aspectRatio.widthComponent}:
+                                        {aspectRatio.heightComponent})
                                     </Checkbox.Label>
                                 </Checkbox.Root>
                             </HStack>
