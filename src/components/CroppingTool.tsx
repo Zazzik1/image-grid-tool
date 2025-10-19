@@ -133,12 +133,12 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             setStartPoint({ x, y });
                         }
                         if (startPoint && !endPoint) {
-                            const y =
-                                (aspectRatio.heightComponent /
-                                    aspectRatio.widthComponent) *
-                                    (x - startPoint.x) +
-                                startPoint.y;
                             if (aspectRatio.force) {
+                                const y =
+                                    (aspectRatio.heightComponent /
+                                        aspectRatio.widthComponent) *
+                                        (x - startPoint.x) +
+                                    startPoint.y;
                                 setEndPoint({
                                     x,
                                     y:
