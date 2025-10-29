@@ -17,7 +17,11 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FaGithub } from 'react-icons/fa';
 import { HiUpload } from 'react-icons/hi';
-import { getAspectRatio, getGridSuggestion } from './util';
+import {
+    getAspectRatio,
+    getGridSuggestion,
+    getLineThicknessSuggestion,
+} from './util';
 import CroppingTool from './components/CroppingTool';
 
 function App() {
@@ -51,6 +55,9 @@ function App() {
             grid: { columns, rows },
         } = getGridSuggestion(img);
         setAspectRatio(aspectRatio);
+        setLineThickness(
+            getLineThicknessSuggestion(img.naturalWidth, img.naturalHeight),
+        );
         setRows(rows);
         setColumns(columns);
     }, []);

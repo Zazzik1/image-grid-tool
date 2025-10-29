@@ -1,6 +1,5 @@
-const MAX_ASPECT_RATIO_N = 20;
+const MAX_ASPECT_RATIO_N = 30;
 const FRACTION_DIGITS = 3;
-const SCALING_FACTOR = 100;
 
 export type AspectRatio = {
     label: string;
@@ -10,32 +9,33 @@ export type AspectRatio = {
 };
 
 export function getAspectRatio(width: number, height: number): AspectRatio {
-    const target = (
-        Math.floor((SCALING_FACTOR * width) / height) / SCALING_FACTOR
-    ).toFixed(FRACTION_DIGITS);
+    const ratio = width / height;
 
-    for (let i = 0; i < MAX_ASPECT_RATIO_N; i++) {
-        for (let j = 0; j < MAX_ASPECT_RATIO_N; j++) {
-            if (
-                (Math.floor((SCALING_FACTOR * j) / i) / SCALING_FACTOR).toFixed(
-                    FRACTION_DIGITS,
-                ) === target
-            ) {
-                console.log(target);
-                return {
-                    label: `${j}:${i}`,
-                    widthComponent: j,
-                    heightComponent: i,
-                    factorFound: true,
-                };
-            }
+    let bestI = 1;
+    let bestJ = 1;
+    let bestDiff = Infinity;
+
+    for (let i = 1; i <= MAX_ASPECT_RATIO_N; i++) {
+        const j = Math.round(i * ratio);
+        if (j > MAX_ASPECT_RATIO_N) continue;
+
+        const diff = Math.abs(ratio - j / i);
+        if (diff < bestDiff) {
+            bestDiff = diff;
+            bestI = i;
+            bestJ = j;
         }
+        if (diff === 0) break;
     }
+
+    const factorFound = bestDiff < 1 / Math.pow(10, FRACTION_DIGITS);
+    const label = `${bestJ}:${bestI}`;
+
     return {
-        label: `1:${(height / width).toFixed(2)}`,
-        widthComponent: width,
-        heightComponent: height,
-        factorFound: false,
+        label,
+        widthComponent: bestJ,
+        heightComponent: bestI,
+        factorFound,
     };
 }
 
@@ -51,28 +51,45 @@ export type GridSuggestion = {
 
 export function getGridSuggestion(img: HTMLImageElement): GridSuggestion {
     const aspectRatio = getAspectRatio(img.naturalWidth, img.naturalHeight);
-    const { widthComponent, heightComponent, factorFound } = aspectRatio;
+    const { widthComponent, heightComponent } = aspectRatio;
     const multiplier = Math.max(
         1,
         Math.ceil(img.naturalWidth / aspectRatio.widthComponent / 200),
         Math.ceil(img.naturalHeight / aspectRatio.heightComponent / 200),
     );
-    // e.g. 1:1.01, 1:3.14
-    if (!factorFound) {
-        return {
-            aspectRatio,
-            grid: {
-                columns: 4,
-                rows: 4,
-            },
-        };
+
+    let columns = widthComponent * multiplier;
+    let rows = heightComponent * multiplier;
+    if (columns < 4 || rows < 4) {
+        /**
+         * scales both columns and rows by the factor
+         * that provides at least 4 in rows or columns
+         * e.g. transforms 1:0.5 to 4:12
+         */
+        const factor = Math.pow(
+            2,
+            Math.ceil(Math.log2(4 / Math.min(columns, rows))),
+        );
+        columns *= factor;
+        rows *= factor;
     }
     // e.g. 1:1, 4:5, 16:9
     return {
         aspectRatio,
         grid: {
-            columns: Math.max(widthComponent * multiplier, 4),
-            rows: Math.max(heightComponent * multiplier, 4),
+            columns,
+            rows,
         },
     };
+}
+
+const LINE_THICKNESS_TRESHOLD = 2000;
+export function getLineThicknessSuggestion(
+    width: number,
+    height: number,
+): number {
+    if (width > LINE_THICKNESS_TRESHOLD || height > LINE_THICKNESS_TRESHOLD) {
+        return 3;
+    }
+    return 1;
 }
