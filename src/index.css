@@ -1,4 +1,10 @@
 body {
     margin: 0;
     padding: 0;
+    background-color: rgb(15, 13, 10);
+}
+
+@font-face {
+    font-family: Montserrat;
+    src: url(/public/fonts/Montserrat/Montserrat-Medium.ttf);
 }

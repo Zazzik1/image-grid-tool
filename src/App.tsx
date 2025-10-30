@@ -30,7 +30,7 @@ function App() {
     const [rows, setRows] = useState(4);
     const [columns, setColumns] = useState(4);
     const [lineThickness, setLineThickness] = useState(1);
-    const [color, setColor] = useState('#ffffff');
+    const [color, setColor] = useState('#363026');
     const [diagonals, setDiagonals] = useState(false);
     const [image, setImage] = useState<HTMLImageElement | null>(null);
     const [aspectRatio, setAspectRatio] = useState<ReturnType<
@@ -149,9 +149,10 @@ function App() {
         >
             <HStack
                 padding={isMobile() ? '0 8px' : '0 64px'}
-                backgroundColor="rgb(16, 16, 16)"
-                borderLeft="1px solid rgb(32, 32, 32)"
-                borderRight="1px solid rgb(32, 32, 32)"
+                backgroundColor="#080705"
+                color="#f4f3ee"
+                borderLeft="1px solid #221e18"
+                borderRight="1px solid #221e18"
                 gap="0 128px"
                 justifyContent="space-between"
                 alignItems="start"
@@ -163,21 +164,32 @@ function App() {
                 <Stack>
                     <Heading
                         size="5xl"
-                        color="green.500"
+                        color="green.400"
+                        fontFamily="Montserrat"
+                        fontWeight="100"
+                        letterSpacing="-4px"
+                        marginTop="8px"
                     >
                         Image Grid Tool
                     </Heading>
                     <Text
                         maxWidth="400px"
-                        color="green.500"
+                        color="green.200"
                         marginBottom="16px"
                     >
                         A simple way to add grids to images.
                     </Text>
-                    <Heading size="md">1. Load your image</Heading>
+                    <Heading
+                        size="md"
+                        color="green.100"
+                        fontFamily="Montserrat"
+                        fontWeight="100"
+                    >
+                        1. Load your image
+                    </Heading>
                     <Text
                         maxWidth="400px"
-                        color="green.400"
+                        color="green.200"
                         fontSize="0.8em"
                     >
                         Don't worry - your image stays on your device. All
@@ -257,6 +269,9 @@ function App() {
                     <Heading
                         size="md"
                         marginTop="16px"
+                        color="green.100"
+                        fontFamily="Montserrat"
+                        fontWeight="100"
                     >
                         2. Adjust the grid for your needs
                     </Heading>
@@ -354,6 +369,9 @@ function App() {
                     <Heading
                         size="md"
                         marginTop="16px"
+                        color="green.100"
+                        fontFamily="Montserrat"
+                        fontWeight="100"
                     >
                         3. Choose the color
                     </Heading>
@@ -384,6 +402,9 @@ function App() {
                     <Heading
                         size="md"
                         marginTop="16px"
+                        color="green.100"
+                        fontFamily="Montserrat"
+                        fontWeight="100"
                     >
                         4. Download the final image
                     </Heading>
@@ -405,29 +426,40 @@ function App() {
                         height="600"
                         ref={canvasRef}
                         style={{
-                            border: '1px solid rgb(32, 32, 32)',
+                            border: '1px solid #221e18',
                             maxWidth: `calc(100vw - 64px)`,
                             maxHeight: `calc(100vh - 64px)`,
                             margin: '12px',
                         }}
                     ></canvas>
                 </Box>
-                <Link
+                <HStack
                     position="fixed"
                     bottom="0"
                     right="0"
-                    href="https://github.com/Zazzik1/image-grid-tool"
-                    target="_blank"
-                    rel="noopener noreferrer"
                 >
-                    <IconButton
-                        aria-label="GitHub"
-                        variant="ghost"
-                        padding="0 8px"
+                    <Text
+                        fontSize="0.8em"
+                        color="rgba(255, 255, 255, 0.5)"
                     >
-                        <FaGithub />
-                    </IconButton>
-                </Link>
+                        {import.meta.env.MODE === 'development'
+                            ? 'dev'
+                            : __COMMIT_HASH__}
+                    </Text>
+                    <Link
+                        href="https://github.com/Zazzik1/image-grid-tool"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <IconButton
+                            aria-label="GitHub"
+                            variant="ghost"
+                            padding="0 8px"
+                        >
+                            <FaGithub />
+                        </IconButton>
+                    </Link>
+                </HStack>
             </HStack>
         </Box>
     );
