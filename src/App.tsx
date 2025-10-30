@@ -1,4 +1,5 @@
 import {
+    Box,
     Button,
     Checkbox,
     ColorPicker,
@@ -19,6 +20,7 @@ import { FaGithub } from 'react-icons/fa';
 import { HiUpload } from 'react-icons/hi';
 import {
     getAspectRatio,
+    getGridColorSuggestion,
     getGridSuggestion,
     getLineThicknessSuggestion,
 } from './util';
@@ -34,8 +36,6 @@ function App() {
     const [aspectRatio, setAspectRatio] = useState<ReturnType<
         typeof getAspectRatio
     > | null>(null);
-    const [innerWidth, setInnerWidth] = useState(window.innerHeight);
-    const [innerHeight, setInnerHeight] = useState(window.innerHeight);
     const [filename, setFilename] = useState('');
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -55,6 +55,7 @@ function App() {
             grid: { columns, rows },
         } = getGridSuggestion(img);
         setAspectRatio(aspectRatio);
+        setColor(getGridColorSuggestion(img));
         setLineThickness(
             getLineThicknessSuggestion(img.naturalWidth, img.naturalHeight),
         );
@@ -70,17 +71,6 @@ function App() {
         },
         [suggestGrids],
     );
-
-    useEffect(() => {
-        const handler = () => {
-            setInnerHeight(window.innerHeight);
-            setInnerWidth(window.innerWidth);
-        };
-        window.addEventListener('resize', handler);
-        return () => {
-            window.removeEventListener('resize', handler);
-        };
-    }, []);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -148,267 +138,298 @@ function App() {
         () => getAspectRatio(pxPerColumn, pxPerRow).label,
         [pxPerColumn, pxPerRow],
     );
+    const isMobile = useCallback(() => {
+        return window.innerWidth < 600;
+    }, []);
     return (
-        <HStack
-            padding="0 8px"
-            justifyContent="space-between"
-            alignItems="start"
-            minHeight="100vh"
-            height="100vh"
-            boxSizing="border-box"
+        <Box
+            display="flex"
+            justifyContent={isMobile() ? 'normal' : 'center'}
             flexWrap="wrap"
         >
-            <Stack>
-                <Heading
-                    size="5xl"
-                    color="green.500"
-                >
-                    Image Grid Tool
-                </Heading>
-                <Text
-                    maxWidth="400px"
-                    color="green.500"
-                    marginBottom="16px"
-                >
-                    A simple way to add grids to images.
-                </Text>
-                <Heading size="md">1. Load your image</Heading>
-                <Text
-                    maxWidth="400px"
-                    color="green.400"
-                    fontSize="0.8em"
-                >
-                    Don't worry - your image stays on your device. All
-                    processing happens right in your browser.
-                </Text>
-                <HStack>
-                    <FileUpload.Root
-                        width="max-content"
-                        accept={[
-                            'image/png',
-                            'image/jpeg',
-                            'image/webp',
-                            'image/heic',
-                        ]}
-                        onFileChange={(e) => {
-                            const file = e.acceptedFiles[0];
-                            if (!file) return;
-
-                            setFilename(file.name);
-
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                                const result = ev.target?.result;
-                                if (!result) return;
-
-                                const img = new Image();
-                                img.onload = () => {
-                                    setImage(img);
-                                    suggestGrids(img);
-                                };
-                                img.onerror = () =>
-                                    console.error('Failed to load image');
-                                img.src = result as string;
-                            };
-                            reader.readAsDataURL(file);
-                        }}
+            <HStack
+                padding={isMobile() ? '0 8px' : '0 64px'}
+                backgroundColor="rgb(16, 16, 16)"
+                borderLeft="1px solid rgb(32, 32, 32)"
+                borderRight="1px solid rgb(32, 32, 32)"
+                gap="0 128px"
+                justifyContent="space-between"
+                alignItems="start"
+                minHeight="100vh"
+                height="100vh"
+                boxSizing="border-box"
+                flexWrap="wrap"
+            >
+                <Stack>
+                    <Heading
+                        size="5xl"
+                        color="green.500"
                     >
-                        <FileUpload.HiddenInput />
-                        <FileUpload.Trigger asChild>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                            >
-                                <HiUpload /> Load image
-                            </Button>
-                        </FileUpload.Trigger>
-                    </FileUpload.Root>
-                    {image && (
-                        <CroppingTool
-                            image={image}
-                            onSave={handleCropSave}
-                        />
-                    )}
-                </HStack>
-                {image && (
+                        Image Grid Tool
+                    </Heading>
+                    <Text
+                        maxWidth="400px"
+                        color="green.500"
+                        marginBottom="16px"
+                    >
+                        A simple way to add grids to images.
+                    </Text>
+                    <Heading size="md">1. Load your image</Heading>
+                    <Text
+                        maxWidth="400px"
+                        color="green.400"
+                        fontSize="0.8em"
+                    >
+                        Don't worry - your image stays on your device. All
+                        processing happens right in your browser.
+                    </Text>
                     <HStack>
+                        <FileUpload.Root
+                            width="max-content"
+                            accept={[
+                                'image/png',
+                                'image/jpeg',
+                                'image/webp',
+                                'image/heic',
+                            ]}
+                            onFileChange={(e) => {
+                                const file = e.acceptedFiles[0];
+                                if (!file) return;
+
+                                setFilename(file.name);
+
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                    const result = ev.target?.result;
+                                    if (!result) return;
+
+                                    const img = new Image();
+                                    img.onload = () => {
+                                        setImage(img);
+                                        suggestGrids(img);
+                                    };
+                                    img.onerror = () =>
+                                        console.error('Failed to load image');
+                                    img.src = result as string;
+                                };
+                                reader.readAsDataURL(file);
+                            }}
+                        >
+                            <FileUpload.HiddenInput />
+                            <FileUpload.Trigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                >
+                                    <HiUpload /> Load image
+                                </Button>
+                            </FileUpload.Trigger>
+                        </FileUpload.Root>
+                        {image && (
+                            <CroppingTool
+                                image={image}
+                                onSave={handleCropSave}
+                            />
+                        )}
+                    </HStack>
+                    {image && (
+                        <HStack>
+                            <Stat.Root>
+                                <Stat.Label>Height</Stat.Label>
+                                <Stat.ValueText>
+                                    {image.naturalHeight}px
+                                </Stat.ValueText>
+                            </Stat.Root>
+                            <Stat.Root>
+                                <Stat.Label>Width</Stat.Label>
+                                <Stat.ValueText>
+                                    {image.naturalWidth}px
+                                </Stat.ValueText>
+                            </Stat.Root>
+                            <Stat.Root>
+                                <Stat.Label>Aspect ratio</Stat.Label>
+                                <Stat.ValueText>
+                                    {aspectRatio?.label}
+                                </Stat.ValueText>
+                            </Stat.Root>
+                        </HStack>
+                    )}
+                    <Heading
+                        size="md"
+                        marginTop="16px"
+                    >
+                        2. Adjust the grid for your needs
+                    </Heading>
+                    <HStack
+                        gap={4}
+                        flexWrap="wrap"
+                    >
+                        <Field.Root width="max-content">
+                            <Field.Label>Number of rows</Field.Label>
+                            <NumberInput.Root
+                                maxW="200px"
+                                value={rows.toString()}
+                                min={1}
+                                onValueChange={(e: {
+                                    valueAsNumber: number;
+                                }) => {
+                                    const value = e.valueAsNumber;
+                                    if (Number.isNaN(value) || value < 0)
+                                        return setRows(1);
+                                    setRows(value);
+                                }}
+                            >
+                                <NumberInput.Control />
+                                <NumberInput.Input />
+                            </NumberInput.Root>
+                            {image && (
+                                <Field.HelperText>
+                                    {pxPerRow}px per row (
+                                    {(Math.round(1000 / rows) / 10).toFixed(1)}
+                                    %)
+                                </Field.HelperText>
+                            )}
+                        </Field.Root>
+                        <Field.Root width="max-content">
+                            <Field.Label>Number of columns</Field.Label>
+                            <NumberInput.Root
+                                maxW="200px"
+                                value={columns.toString()}
+                                min={1}
+                                onValueChange={(e: {
+                                    valueAsNumber: number;
+                                }) => {
+                                    const value = e.valueAsNumber;
+                                    if (Number.isNaN(value) || value < 0)
+                                        return setColumns(1);
+                                    setColumns(value);
+                                }}
+                            >
+                                <NumberInput.Control />
+                                <NumberInput.Input />
+                            </NumberInput.Root>
+                            {image && (
+                                <Field.HelperText>
+                                    {pxPerColumn}px per column (
+                                    {(Math.round(1000 / columns) / 10).toFixed(
+                                        1,
+                                    )}
+                                    %)
+                                </Field.HelperText>
+                            )}
+                        </Field.Root>
                         <Stat.Root>
-                            <Stat.Label>Height</Stat.Label>
-                            <Stat.ValueText>
-                                {image.naturalHeight}px
-                            </Stat.ValueText>
-                        </Stat.Root>
-                        <Stat.Root>
-                            <Stat.Label>Width</Stat.Label>
-                            <Stat.ValueText>
-                                {image.naturalWidth}px
-                            </Stat.ValueText>
-                        </Stat.Root>
-                        <Stat.Root>
-                            <Stat.Label>Aspect ratio</Stat.Label>
-                            <Stat.ValueText>
-                                {aspectRatio?.label}
-                            </Stat.ValueText>
+                            <Stat.Label>Cell aspect ratio</Stat.Label>
+                            <Stat.ValueText>{cellAspectRatio}</Stat.ValueText>
                         </Stat.Root>
                     </HStack>
-                )}
-                <Heading
-                    size="md"
-                    marginTop="16px"
-                >
-                    2. Adjust the grid for your needs
-                </Heading>
-                <HStack gap={4}>
-                    <Field.Root width="max-content">
-                        <Field.Label>Number of rows</Field.Label>
-                        <NumberInput.Root
-                            maxW="200px"
-                            value={rows.toString()}
-                            min={1}
-                            onValueChange={(e: { valueAsNumber: number }) => {
-                                const value = e.valueAsNumber;
-                                if (Number.isNaN(value) || value < 0)
-                                    return setRows(1);
-                                setRows(value);
-                            }}
-                        >
-                            <NumberInput.Control />
-                            <NumberInput.Input />
-                        </NumberInput.Root>
-                        {image && (
-                            <Field.HelperText>
-                                {pxPerRow}px per row (
-                                {(Math.round(1000 / rows) / 10).toFixed(1)}
-                                %)
-                            </Field.HelperText>
-                        )}
-                    </Field.Root>
-                    <Field.Root width="max-content">
-                        <Field.Label>Number of columns</Field.Label>
-                        <NumberInput.Root
-                            maxW="200px"
-                            value={columns.toString()}
-                            min={1}
-                            onValueChange={(e: { valueAsNumber: number }) => {
-                                const value = e.valueAsNumber;
-                                if (Number.isNaN(value) || value < 0)
-                                    return setColumns(1);
-                                setColumns(value);
-                            }}
-                        >
-                            <NumberInput.Control />
-                            <NumberInput.Input />
-                        </NumberInput.Root>
-                        {image && (
-                            <Field.HelperText>
-                                {pxPerColumn}px per column (
-                                {(Math.round(1000 / columns) / 10).toFixed(1)}%)
-                            </Field.HelperText>
-                        )}
-                    </Field.Root>
-                    <Stat.Root>
-                        <Stat.Label>Cell aspect ratio</Stat.Label>
-                        <Stat.ValueText>{cellAspectRatio}</Stat.ValueText>
-                    </Stat.Root>
-                </HStack>
-                <HStack
-                    gap={4}
-                    alignItems="end"
-                >
-                    <Field.Root width="max-content">
-                        <Field.Label>Line thickness</Field.Label>
-                        <NumberInput.Root
-                            maxW="200px"
-                            value={lineThickness.toString()}
-                            min={1}
-                            onValueChange={(e: { valueAsNumber: number }) =>
-                                setLineThickness(e.valueAsNumber)
-                            }
-                        >
-                            <NumberInput.Control />
-                            <NumberInput.Input />
-                        </NumberInput.Root>
-                    </Field.Root>
-                    <Checkbox.Root
-                        width="max-content"
-                        checked={diagonals}
-                        onCheckedChange={(e) => setDiagonals(!!e.checked)}
+                    <HStack
+                        gap={4}
+                        alignItems="end"
                     >
-                        <Checkbox.HiddenInput />
-                        <Checkbox.Control />
-                        <Checkbox.Label>Add diagonals?</Checkbox.Label>
-                    </Checkbox.Root>
-                </HStack>
-                <Heading
-                    size="md"
-                    marginTop="16px"
-                >
-                    3. Choose the color
-                </Heading>
-                <ColorPicker.Root
-                    open
-                    value={parseColor(color)}
-                    onValueChange={(e) => setColor(e.value.toString('hexa'))}
-                >
-                    <ColorPicker.HiddenInput />
-                    <ColorPicker.Content
-                        animation="none"
-                        shadow="none"
-                        padding="0"
+                        <Field.Root width="max-content">
+                            <Field.Label>Line thickness</Field.Label>
+                            <NumberInput.Root
+                                maxW="200px"
+                                value={lineThickness.toString()}
+                                min={1}
+                                onValueChange={(e: { valueAsNumber: number }) =>
+                                    setLineThickness(e.valueAsNumber)
+                                }
+                            >
+                                <NumberInput.Control />
+                                <NumberInput.Input />
+                            </NumberInput.Root>
+                        </Field.Root>
+                        <Checkbox.Root
+                            width="max-content"
+                            checked={diagonals}
+                            onCheckedChange={(e) => setDiagonals(!!e.checked)}
+                        >
+                            <Checkbox.HiddenInput />
+                            <Checkbox.Control />
+                            <Checkbox.Label>Add diagonals?</Checkbox.Label>
+                        </Checkbox.Root>
+                    </HStack>
+                    <Heading
+                        size="md"
+                        marginTop="16px"
                     >
-                        <ColorPicker.Area />
-                        <HStack>
-                            <ColorPicker.EyeDropper
-                                size="xs"
-                                variant="outline"
-                            />
-                            <ColorPicker.Sliders />
-                            <ColorPicker.ValueSwatch />
-                        </HStack>
-                    </ColorPicker.Content>
-                </ColorPicker.Root>
-                <Heading
-                    size="md"
-                    marginTop="16px"
+                        3. Choose the color
+                    </Heading>
+                    <ColorPicker.Root
+                        open
+                        value={parseColor(color)}
+                        onValueChange={(e) =>
+                            setColor(e.value.toString('hexa'))
+                        }
+                    >
+                        <ColorPicker.HiddenInput />
+                        <ColorPicker.Content
+                            animation="none"
+                            shadow="none"
+                            padding="0"
+                        >
+                            <ColorPicker.Area />
+                            <HStack>
+                                <ColorPicker.EyeDropper
+                                    size="xs"
+                                    variant="outline"
+                                />
+                                <ColorPicker.Sliders />
+                                <ColorPicker.ValueSwatch />
+                            </HStack>
+                        </ColorPicker.Content>
+                    </ColorPicker.Root>
+                    <Heading
+                        size="md"
+                        marginTop="16px"
+                    >
+                        4. Download the final image
+                    </Heading>
+                    <Button
+                        colorPalette="green"
+                        onClick={handleDownload}
+                        disabled={!image}
+                    >
+                        Download image with grid
+                    </Button>
+                </Stack>
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    height="100%"
                 >
-                    4. Download the final image
-                </Heading>
-                <Button
-                    colorPalette="green"
-                    onClick={handleDownload}
-                    disabled={!image}
+                    <canvas
+                        width="600"
+                        height="600"
+                        ref={canvasRef}
+                        style={{
+                            border: '1px solid rgb(32, 32, 32)',
+                            maxWidth: `calc(100vw - 64px)`,
+                            maxHeight: `calc(100vh - 64px)`,
+                            margin: '12px',
+                        }}
+                    ></canvas>
+                </Box>
+                <Link
+                    position="fixed"
+                    bottom="0"
+                    right="0"
+                    href="https://github.com/Zazzik1/image-grid-tool"
+                    target="_blank"
+                    rel="noopener noreferrer"
                 >
-                    Download image with grid
-                </Button>
-            </Stack>
-            <canvas
-                width="600"
-                height="600"
-                ref={canvasRef}
-                style={{
-                    border: '1px solid #333333',
-                    maxWidth: `calc(${innerWidth}px - 200px)`,
-                    maxHeight: `calc(${innerHeight}px - 32px)`,
-                    margin: '12px',
-                }}
-            ></canvas>
-            <Link
-                position="fixed"
-                bottom="0"
-                right="0"
-                href="https://github.com/Zazzik1/image-grid-tool"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                <IconButton
-                    aria-label="GitHub"
-                    variant="ghost"
-                    padding="0 8px"
-                >
-                    <FaGithub />
-                </IconButton>
-            </Link>
-        </HStack>
+                    <IconButton
+                        aria-label="GitHub"
+                        variant="ghost"
+                        padding="0 8px"
+                    >
+                        <FaGithub />
+                    </IconButton>
+                </Link>
+            </HStack>
+        </Box>
     );
 }
 
