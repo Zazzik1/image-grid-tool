@@ -33,6 +33,7 @@ function App() {
     const [color, setColor] = useState('#363026');
     const [diagonals, setDiagonals] = useState(false);
     const [image, setImage] = useState<HTMLImageElement | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const [aspectRatio, setAspectRatio] = useState<ReturnType<
         typeof getAspectRatio
     > | null>(null);
@@ -209,6 +210,7 @@ function App() {
                                 if (!file) return;
 
                                 setFilename(file.name);
+                                setError(null);
 
                                 const reader = new FileReader();
                                 reader.onload = (ev) => {
@@ -221,7 +223,7 @@ function App() {
                                         suggestGrids(img);
                                     };
                                     img.onerror = () =>
-                                        console.error('Failed to load image');
+                                        setError('Failed to load image');
                                     img.src = result as string;
                                 };
                                 reader.readAsDataURL(file);
@@ -243,6 +245,7 @@ function App() {
                                 onSave={handleCropSave}
                             />
                         )}
+                        {error ? <Text color="red">{error}</Text> : ''}
                     </HStack>
                     {image && (
                         <HStack>
