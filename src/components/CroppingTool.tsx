@@ -15,6 +15,10 @@ type Props = {
     onSave: (image: HTMLImageElement) => void;
 };
 
+function getSign(x1: number, y1: number, x2: number, y2: number) {
+    return (((y2 - y1) / Math.abs(y2 - y1)) * (x2 - x1)) / Math.abs(x2 - x1);
+}
+
 const CroppingTool = ({ image, onSave }: Props) => {
     const bodyRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -138,16 +142,22 @@ const CroppingTool = ({ image, onSave }: Props) => {
                         }
                         if (startPoint && !endPoint) {
                             if (aspectRatio.force) {
-                                const y =
+                                const newY: number =
                                     (aspectRatio.heightComponent /
                                         aspectRatio.widthComponent) *
+                                        getSign(
+                                            startPoint.x,
+                                            startPoint.y,
+                                            x,
+                                            y,
+                                        ) *
                                         (x - startPoint.x) +
                                     startPoint.y;
                                 setEndPoint({
                                     x,
                                     y:
                                         y <= canvasOverlay.height
-                                            ? y
+                                            ? newY
                                             : canvasOverlay.height,
                                 });
                             } else {
@@ -178,6 +188,12 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                     (aspectRatio.force
                                         ? (aspectRatio.heightComponent /
                                               aspectRatio.widthComponent) *
+                                              getSign(
+                                                  startPoint.x,
+                                                  startPoint.y,
+                                                  x,
+                                                  y,
+                                              ) *
                                               (x - startPoint.x) +
                                           startPoint.y
                                         : y)) - startPoint.y,
