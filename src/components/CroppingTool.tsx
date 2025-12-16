@@ -15,6 +15,10 @@ type Props = {
     onSave: (image: HTMLImageElement) => void;
 };
 
+function getSign(x1: number, y1: number, x2: number, y2: number) {
+    return (((y2 - y1) / Math.abs(y2 - y1)) * (x2 - x1)) / Math.abs(x2 - x1);
+}
+
 const CroppingTool = ({ image, onSave }: Props) => {
     const bodyRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -38,6 +42,17 @@ const CroppingTool = ({ image, onSave }: Props) => {
         heightComponent: 1,
     });
 
+    const handleResetPoints = useCallback(() => {
+        setStartPoint(null);
+        setEndPoint(null);
+        setOpen(false);
+        setAspectRatio({
+            force: true,
+            heightComponent: 1,
+            widthComponent: 1,
+        });
+    }, []);
+
     const handleSave = useCallback(() => {
         if (!startPoint || !endPoint) return image; // no need to crop
         const canvas = canvasRef.current;
@@ -58,18 +73,11 @@ const CroppingTool = ({ image, onSave }: Props) => {
         const img = new Image();
         img.onload = () => {
             onSave(img);
-            setStartPoint(null);
-            setEndPoint(null);
-            setOpen(false);
-            setAspectRatio({
-                force: true,
-                heightComponent: 1,
-                widthComponent: 1,
-            });
+            handleResetPoints();
         };
         tempCtx.putImageData(imageData, 0, 0);
         img.src = tempCanvas.toDataURL();
-    }, [onSave, image, startPoint, endPoint]);
+    }, [onSave, image, startPoint, endPoint, handleResetPoints]);
 
     useEffect(() => {
         const listeners: {
@@ -134,16 +142,22 @@ const CroppingTool = ({ image, onSave }: Props) => {
                         }
                         if (startPoint && !endPoint) {
                             if (aspectRatio.force) {
-                                const y =
+                                const newY: number =
                                     (aspectRatio.heightComponent /
                                         aspectRatio.widthComponent) *
+                                        getSign(
+                                            startPoint.x,
+                                            startPoint.y,
+                                            x,
+                                            y,
+                                        ) *
                                         (x - startPoint.x) +
                                     startPoint.y;
                                 setEndPoint({
                                     x,
                                     y:
                                         y <= canvasOverlay.height
-                                            ? y
+                                            ? newY
                                             : canvasOverlay.height,
                                 });
                             } else {
@@ -174,6 +188,12 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                     (aspectRatio.force
                                         ? (aspectRatio.heightComponent /
                                               aspectRatio.widthComponent) *
+                                              getSign(
+                                                  startPoint.x,
+                                                  startPoint.y,
+                                                  x,
+                                                  y,
+                                              ) *
                                               (x - startPoint.x) +
                                           startPoint.y
                                         : y)) - startPoint.y,
@@ -233,6 +253,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
             lazyMount
             open={open}
             onOpenChange={(e) => setOpen(e.open)}
+            onExitComplete={handleResetPoints}
         >
             <Dialog.Trigger asChild>
                 <Button
