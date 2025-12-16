@@ -38,6 +38,17 @@ const CroppingTool = ({ image, onSave }: Props) => {
         heightComponent: 1,
     });
 
+    const handleResetPoints = useCallback(() => {
+        setStartPoint(null);
+        setEndPoint(null);
+        setOpen(false);
+        setAspectRatio({
+            force: true,
+            heightComponent: 1,
+            widthComponent: 1,
+        });
+    }, []);
+
     const handleSave = useCallback(() => {
         if (!startPoint || !endPoint) return image; // no need to crop
         const canvas = canvasRef.current;
@@ -58,18 +69,11 @@ const CroppingTool = ({ image, onSave }: Props) => {
         const img = new Image();
         img.onload = () => {
             onSave(img);
-            setStartPoint(null);
-            setEndPoint(null);
-            setOpen(false);
-            setAspectRatio({
-                force: true,
-                heightComponent: 1,
-                widthComponent: 1,
-            });
+            handleResetPoints();
         };
         tempCtx.putImageData(imageData, 0, 0);
         img.src = tempCanvas.toDataURL();
-    }, [onSave, image, startPoint, endPoint]);
+    }, [onSave, image, startPoint, endPoint, handleResetPoints]);
 
     useEffect(() => {
         const listeners: {
@@ -233,6 +237,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
             lazyMount
             open={open}
             onOpenChange={(e) => setOpen(e.open)}
+            onExitComplete={handleResetPoints}
         >
             <Dialog.Trigger asChild>
                 <Button
