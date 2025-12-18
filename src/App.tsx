@@ -23,8 +23,10 @@ import {
     getGridColorSuggestion,
     getGridSuggestion,
     getLineThicknessSuggestion,
+    rotateImage,
 } from './util';
 import CroppingTool from './components/CroppingTool';
+import { FaArrowRotateLeft, FaArrowRotateRight } from 'react-icons/fa6';
 
 function App() {
     const [rows, setRows] = useState(4);
@@ -63,6 +65,22 @@ function App() {
         setRows(rows);
         setColumns(columns);
     }, []);
+
+    const handleTurnLeft = useCallback(() => {
+        if (!image) return;
+        rotateImage(image, -90).then((img) => {
+            setImage(img);
+            suggestGrids(img);
+        });
+    }, [image, suggestGrids]);
+
+    const handleTurnRight = useCallback(() => {
+        if (!image) return;
+        rotateImage(image, 90).then((img) => {
+            setImage(img);
+            suggestGrids(img);
+        });
+    }, [image, suggestGrids]);
 
     const handleCropSave = useCallback(
         (image: HTMLImageElement) => {
@@ -240,10 +258,26 @@ function App() {
                             </FileUpload.Trigger>
                         </FileUpload.Root>
                         {image && (
-                            <CroppingTool
-                                image={image}
-                                onSave={handleCropSave}
-                            />
+                            <>
+                                <CroppingTool
+                                    image={image}
+                                    onSave={handleCropSave}
+                                />
+                                <IconButton
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleTurnLeft}
+                                >
+                                    <FaArrowRotateLeft />
+                                </IconButton>
+                                <IconButton
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleTurnRight}
+                                >
+                                    <FaArrowRotateRight />
+                                </IconButton>
+                            </>
                         )}
                         {error ? <Text color="red">{error}</Text> : ''}
                     </HStack>

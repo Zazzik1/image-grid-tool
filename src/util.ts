@@ -161,3 +161,33 @@ export function getGridColorSuggestion(img: HTMLImageElement) {
     const avg = getAverageColor(ctx, canvas.width, canvas.height);
     return getContrastColor(avg.r, avg.g, avg.b);
 }
+
+export function rotateImage(
+    image: HTMLImageElement,
+    angle: number,
+): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('ctx == null'));
+
+        const normalized = ((angle % 360) + 360) % 360;
+        const swapSides = normalized === 90 || normalized === 270;
+
+        canvas.width = swapSides ? image.naturalHeight : image.naturalWidth;
+        canvas.height = swapSides ? image.naturalWidth : image.naturalHeight;
+
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate((normalized * Math.PI) / 180);
+
+        ctx.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
+
+        ctx.restore();
+
+        const newImage = new Image();
+        newImage.onload = () => resolve(newImage);
+        newImage.onerror = reject;
+        newImage.src = canvas.toDataURL();
+    });
+}
