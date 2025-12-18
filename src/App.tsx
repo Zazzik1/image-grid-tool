@@ -27,6 +27,7 @@ import {
 } from './util';
 import CroppingTool from './components/CroppingTool';
 import { FaArrowRotateLeft, FaArrowRotateRight } from 'react-icons/fa6';
+import { TbMultiplier05X, TbMultiplier2X } from 'react-icons/tb';
 
 function App() {
     const [rows, setRows] = useState(4);
@@ -160,6 +161,12 @@ function App() {
     const isMobile = useCallback(() => {
         return window.innerWidth < 600;
     }, []);
+    const canHalve = useMemo(
+        () =>
+            columns / 2 === Math.floor(columns / 2) &&
+            rows / 2 === Math.floor(rows / 2),
+        [columns, rows],
+    );
     return (
         <Box
             display="flex"
@@ -313,13 +320,14 @@ function App() {
                         2. Adjust the grid for your needs
                     </Heading>
                     <HStack
-                        gap={4}
+                        gap={2}
                         flexWrap="wrap"
+                        alignItems="start"
                     >
                         <Field.Root width="max-content">
                             <Field.Label>Number of rows</Field.Label>
                             <NumberInput.Root
-                                maxW="200px"
+                                maxW="160px"
                                 value={rows.toString()}
                                 min={1}
                                 onValueChange={(e: {
@@ -345,7 +353,7 @@ function App() {
                         <Field.Root width="max-content">
                             <Field.Label>Number of columns</Field.Label>
                             <NumberInput.Root
-                                maxW="200px"
+                                maxW="160px"
                                 value={columns.toString()}
                                 min={1}
                                 onValueChange={(e: {
@@ -370,19 +378,52 @@ function App() {
                                 </Field.HelperText>
                             )}
                         </Field.Root>
-                        <Stat.Root>
+                        {image != null && (
+                            <Field.Root width="max-content">
+                                <Field.Label>&nbsp;</Field.Label>
+                                <HStack>
+                                    <IconButton
+                                        variant="outline"
+                                        padding="0 8px"
+                                        disabled={
+                                            pxPerColumn <= 1 || pxPerRow <= 1
+                                        }
+                                        onClick={() => {
+                                            setColumns(columns * 2);
+                                            setRows(rows * 2);
+                                        }}
+                                    >
+                                        <TbMultiplier2X />
+                                    </IconButton>
+                                    <IconButton
+                                        variant="outline"
+                                        padding="0 8px"
+                                        disabled={!canHalve}
+                                        onClick={() => {
+                                            if (canHalve) {
+                                                setColumns(columns / 2);
+                                                setRows(rows / 2);
+                                            }
+                                        }}
+                                    >
+                                        <TbMultiplier05X />
+                                    </IconButton>
+                                </HStack>
+                            </Field.Root>
+                        )}
+                        <Stat.Root paddingLeft={2}>
                             <Stat.Label>Cell aspect ratio</Stat.Label>
                             <Stat.ValueText>{cellAspectRatio}</Stat.ValueText>
                         </Stat.Root>
                     </HStack>
                     <HStack
-                        gap={4}
+                        gap={2}
                         alignItems="end"
                     >
                         <Field.Root width="max-content">
                             <Field.Label>Line thickness</Field.Label>
                             <NumberInput.Root
-                                maxW="200px"
+                                maxW="160px"
                                 value={lineThickness.toString()}
                                 min={1}
                                 onValueChange={(e: { valueAsNumber: number }) =>

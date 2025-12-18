@@ -9,6 +9,7 @@ import {
     Field,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { FaCropSimple } from 'react-icons/fa6';
 
 type Props = {
     image: HTMLImageElement;
@@ -260,7 +261,8 @@ const CroppingTool = ({ image, onSave }: Props) => {
                     size="sm"
                     variant="outline"
                 >
-                    Crop image
+                    <FaCropSimple />
+                    Crop
                 </Button>
             </Dialog.Trigger>
             <Portal>
