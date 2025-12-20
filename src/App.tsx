@@ -1,6 +1,7 @@
 import {
     Box,
     Button,
+    Center,
     Checkbox,
     ColorPicker,
     Field,
@@ -11,6 +12,7 @@ import {
     Link,
     NumberInput,
     parseColor,
+    Spinner,
     Stack,
     Stat,
     Text,
@@ -20,6 +22,7 @@ import { FaGithub } from 'react-icons/fa';
 import { HiUpload } from 'react-icons/hi';
 import {
     getAspectRatio,
+    getCellId,
     getGridColorSuggestion,
     getGridSuggestion,
     getLineThicknessSuggestion,
@@ -35,8 +38,10 @@ function App() {
     const [lineThickness, setLineThickness] = useState(1);
     const [color, setColor] = useState('#363026');
     const [diagonals, setDiagonals] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [image, setImage] = useState<HTMLImageElement | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [shouldShowCellIds, setShouldShowCellIds] = useState<boolean>(false);
     const [aspectRatio, setAspectRatio] = useState<ReturnType<
         typeof getAspectRatio
     > | null>(null);
@@ -143,9 +148,35 @@ function App() {
                         }
                     }
                 }
+                if (shouldShowCellIds) {
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 2;
+                    const fontSize = w / columns / 4;
+                    ctx.font = `${fontSize}px monospace`;
+                    for (let y = 0; y < rows; y++) {
+                        for (let x = 0; x < columns; x++) {
+                            const cellId = getCellId(x, y);
+                            ctx.strokeText(
+                                cellId,
+                                (w / columns) * x +
+                                    w / columns / 2 -
+                                    cellId.length * (fontSize / 4),
+                                (h / rows) * y + h / rows / 2 + fontSize / 3,
+                            );
+                        }
+                    }
+                }
             }
         }
-    }, [rows, columns, color, lineThickness, diagonals, image]);
+    }, [
+        rows,
+        columns,
+        color,
+        lineThickness,
+        diagonals,
+        image,
+        shouldShowCellIds,
+    ]);
     const pxPerColumn = useMemo(
         () => (image ? Math.round(image.naturalWidth / columns) : 1),
         [image, columns],
@@ -234,6 +265,7 @@ function App() {
                                 const file = e.acceptedFiles[0];
                                 if (!file) return;
 
+                                setIsLoading(true);
                                 setFilename(file.name);
                                 setError(null);
 
@@ -246,9 +278,12 @@ function App() {
                                     img.onload = () => {
                                         setImage(img);
                                         suggestGrids(img);
+                                        setIsLoading(false);
                                     };
-                                    img.onerror = () =>
+                                    img.onerror = () => {
                                         setError('Failed to load image');
+                                        setIsLoading(false);
+                                    };
                                     img.src = result as string;
                                 };
                                 reader.readAsDataURL(file);
@@ -434,15 +469,30 @@ function App() {
                                 <NumberInput.Input />
                             </NumberInput.Root>
                         </Field.Root>
-                        <Checkbox.Root
-                            width="max-content"
-                            checked={diagonals}
-                            onCheckedChange={(e) => setDiagonals(!!e.checked)}
-                        >
-                            <Checkbox.HiddenInput />
-                            <Checkbox.Control />
-                            <Checkbox.Label>Add diagonals?</Checkbox.Label>
-                        </Checkbox.Root>
+                        <Stack>
+                            <Checkbox.Root
+                                width="max-content"
+                                checked={diagonals}
+                                onCheckedChange={(e) =>
+                                    setDiagonals(!!e.checked)
+                                }
+                            >
+                                <Checkbox.HiddenInput />
+                                <Checkbox.Control />
+                                <Checkbox.Label>Add diagonals?</Checkbox.Label>
+                            </Checkbox.Root>
+                            <Checkbox.Root
+                                width="max-content"
+                                checked={shouldShowCellIds}
+                                onCheckedChange={(e) =>
+                                    setShouldShowCellIds(!!e.checked)
+                                }
+                            >
+                                <Checkbox.HiddenInput />
+                                <Checkbox.Control />
+                                <Checkbox.Label>Add cell ids?</Checkbox.Label>
+                            </Checkbox.Root>
+                        </Stack>
                     </HStack>
                     <Heading
                         size="md"
@@ -498,6 +548,7 @@ function App() {
                     display="flex"
                     alignItems="center"
                     height="100%"
+                    position="relative"
                 >
                     <canvas
                         width="600"
@@ -510,6 +561,19 @@ function App() {
                             margin: '12px',
                         }}
                     ></canvas>
+                    {isLoading && (
+                        <Box
+                            pos="absolute"
+                            inset="0"
+                        >
+                            <Center h="full">
+                                <Spinner
+                                    size="lg"
+                                    color="green.100"
+                                />
+                            </Center>
+                        </Box>
+                    )}
                 </Box>
                 <HStack
                     position="fixed"
