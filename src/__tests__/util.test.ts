@@ -1,5 +1,6 @@
 import {
     getAspectRatio,
+    getCellId,
     getGridSuggestion,
     getLineThicknessSuggestion,
     GridSuggestion,
@@ -94,5 +95,18 @@ describe('getLineThicknessSuggestion', () => {
         expect(getLineThicknessSuggestion(width, height)).toBe(
             expectedLineThickness,
         );
+    });
+});
+
+describe('getCellId', () => {
+    it('works as expected', () => {
+        expect(getCellId(0, 0)).toBe('A1');
+        expect(getCellId(0, 1)).toBe('A2');
+        expect(getCellId(3, 100)).toBe('D101');
+        expect(getCellId(25, 4)).toBe('Z5');
+        expect(getCellId(26, 4)).toBe('AA5');
+        expect(getCellId(52, 4)).toBe('BA5');
+        expect(getCellId(54, 4)).toBe('BC5');
+        expect(getCellId(701, 4)).toBe('ZZ5');
     });
 });

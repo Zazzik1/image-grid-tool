@@ -191,3 +191,16 @@ export function rotateImage(
         newImage.src = canvas.toDataURL();
     });
 }
+
+export function getCellId(x: number, y: number) {
+    let col = x + 1;
+    let letters = '';
+
+    while (col > 0) {
+        col--;
+        letters = String.fromCharCode(65 + (col % 26)) + letters;
+        col = Math.floor(col / 26);
+    }
+
+    return `${letters}${y + 1}`;
+}
