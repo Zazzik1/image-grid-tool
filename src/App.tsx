@@ -110,18 +110,20 @@ function App() {
                     canvas.height = h = image.naturalHeight;
                     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
                 }
+                const cellWidth = w / columns;
+                const cellHeight = h / rows;
                 ctx.fillStyle = color;
                 for (let y = 1; y < rows; y++) {
                     ctx.fillRect(
                         0,
-                        (h / rows) * y - lineThickness / 2,
+                        cellHeight * y - lineThickness / 2,
                         w,
                         lineThickness,
                     );
                 }
                 for (let x = 1; x < columns; x++) {
                     ctx.fillRect(
-                        (w / columns) * x - lineThickness / 2,
+                        cellWidth * x - lineThickness / 2,
                         0,
                         lineThickness,
                         h,
@@ -133,35 +135,35 @@ function App() {
                     for (let y = 0; y < rows; y++) {
                         for (let x = 0; x < columns; x++) {
                             ctx.beginPath();
-                            ctx.moveTo((w / columns) * x, (h / rows) * y);
+                            ctx.moveTo(cellWidth * x, cellHeight * y);
                             ctx.lineTo(
-                                (w / columns) * (x + 1),
-                                (h / rows) * (y + 1),
+                                cellWidth * (x + 1),
+                                cellHeight * (y + 1),
                             );
                             ctx.stroke();
                             ctx.closePath();
                             ctx.beginPath();
-                            ctx.moveTo((w / columns) * (x + 1), (h / rows) * y);
-                            ctx.lineTo((w / columns) * x, (h / rows) * (y + 1));
+                            ctx.moveTo(cellWidth * (x + 1), cellHeight * y);
+                            ctx.lineTo(cellWidth * x, cellHeight * (y + 1));
                             ctx.stroke();
                             ctx.closePath();
                         }
                     }
                 }
                 if (shouldShowCellIds) {
-                    ctx.strokeStyle = color;
+                    ctx.fillStyle = color;
                     ctx.lineWidth = 2;
-                    const fontSize = w / columns / 4;
+                    const fontSize = Math.min(cellWidth, cellHeight) / 3;
                     ctx.font = `${fontSize}px monospace`;
                     for (let y = 0; y < rows; y++) {
                         for (let x = 0; x < columns; x++) {
                             const cellId = getCellId(x, y);
-                            ctx.strokeText(
+                            ctx.fillText(
                                 cellId,
-                                (w / columns) * x +
-                                    w / columns / 2 -
+                                cellWidth * x +
+                                    cellWidth / 2 -
                                     cellId.length * (fontSize / 4),
-                                (h / rows) * y + h / rows / 2 + fontSize / 3,
+                                cellHeight * y + cellHeight / 2 + fontSize / 3,
                             );
                         }
                     }
