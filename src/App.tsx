@@ -1,6 +1,7 @@
 import {
     Box,
     Button,
+    Center,
     Checkbox,
     ColorPicker,
     Field,
@@ -11,6 +12,7 @@ import {
     Link,
     NumberInput,
     parseColor,
+    Spinner,
     Stack,
     Stat,
     Text,
@@ -35,6 +37,7 @@ function App() {
     const [lineThickness, setLineThickness] = useState(1);
     const [color, setColor] = useState('#363026');
     const [diagonals, setDiagonals] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [image, setImage] = useState<HTMLImageElement | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [aspectRatio, setAspectRatio] = useState<ReturnType<
@@ -234,6 +237,7 @@ function App() {
                                 const file = e.acceptedFiles[0];
                                 if (!file) return;
 
+                                setIsLoading(true);
                                 setFilename(file.name);
                                 setError(null);
 
@@ -246,9 +250,12 @@ function App() {
                                     img.onload = () => {
                                         setImage(img);
                                         suggestGrids(img);
+                                        setIsLoading(false);
                                     };
-                                    img.onerror = () =>
+                                    img.onerror = () => {
                                         setError('Failed to load image');
+                                        setIsLoading(false);
+                                    };
                                     img.src = result as string;
                                 };
                                 reader.readAsDataURL(file);
@@ -498,6 +505,7 @@ function App() {
                     display="flex"
                     alignItems="center"
                     height="100%"
+                    position="relative"
                 >
                     <canvas
                         width="600"
@@ -510,6 +518,19 @@ function App() {
                             margin: '12px',
                         }}
                     ></canvas>
+                    {isLoading && (
+                        <Box
+                            pos="absolute"
+                            inset="0"
+                        >
+                            <Center h="full">
+                                <Spinner
+                                    size="lg"
+                                    color="green.100"
+                                />
+                            </Center>
+                        </Box>
+                    )}
                 </Box>
                 <HStack
                     position="fixed"
