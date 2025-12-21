@@ -311,6 +311,7 @@ function App() {
                                     variant="outline"
                                     size="sm"
                                     onClick={handleTurnLeft}
+                                    data-test-name="rotate-left"
                                 >
                                     <FaArrowRotateLeft />
                                 </IconButton>
@@ -318,6 +319,7 @@ function App() {
                                     variant="outline"
                                     size="sm"
                                     onClick={handleTurnRight}
+                                    data-test-name="rotate-right"
                                 >
                                     <FaArrowRotateRight />
                                 </IconButton>
@@ -572,6 +574,7 @@ function App() {
                                 <Spinner
                                     size="lg"
                                     color="green.100"
+                                    data-test-name="canvas-spinner"
                                 />
                             </Center>
                         </Box>
