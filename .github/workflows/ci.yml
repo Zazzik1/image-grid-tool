@@ -42,6 +42,7 @@ jobs:
               with:
                   start: npm run preview
                   wait-on: 'http://localhost:4173'
+                  browser: chrome
               env:
                   CYPRESS_baseUrl: 'http://localhost:4173/image-grid-tool'
 
