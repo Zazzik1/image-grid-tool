@@ -74,6 +74,7 @@ function App() {
 
     const handleTurnLeft = useCallback(() => {
         if (!image) return;
+        setIsLoading(true);
         rotateImage(image, -90).then((img) => {
             setImage(img);
             suggestGrids(img);
@@ -82,6 +83,7 @@ function App() {
 
     const handleTurnRight = useCallback(() => {
         if (!image) return;
+        setIsLoading(true);
         rotateImage(image, 90).then((img) => {
             setImage(img);
             suggestGrids(img);
@@ -93,6 +95,7 @@ function App() {
             setImage(image);
             setAspectRatio(getAspectRatio(image.width, image.height));
             suggestGrids(image);
+            setIsLoading(true);
         },
         [suggestGrids],
     );
@@ -168,6 +171,7 @@ function App() {
                         }
                     }
                 }
+                setIsLoading(false);
             }
         }
     }, [
@@ -477,9 +481,9 @@ function App() {
                             <Checkbox.Root
                                 width="max-content"
                                 checked={diagonals}
-                                onCheckedChange={(e) =>
-                                    setDiagonals(!!e.checked)
-                                }
+                                onCheckedChange={(e) => {
+                                    setDiagonals(!!e.checked);
+                                }}
                             >
                                 <Checkbox.HiddenInput />
                                 <Checkbox.Control />
@@ -488,9 +492,9 @@ function App() {
                             <Checkbox.Root
                                 width="max-content"
                                 checked={shouldShowCellIds}
-                                onCheckedChange={(e) =>
-                                    setShouldShowCellIds(!!e.checked)
-                                }
+                                onCheckedChange={(e) => {
+                                    setShouldShowCellIds(!!e.checked);
+                                }}
                             >
                                 <Checkbox.HiddenInput />
                                 <Checkbox.Control />
