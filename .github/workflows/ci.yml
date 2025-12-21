@@ -37,6 +37,14 @@ jobs:
             - name: Create build
               run: npm run build
 
+            - name: Cypress tests
+              uses: cypress-io/github-action@v6
+              with:
+                  start: npm run preview
+                  wait-on: 'http://localhost:4173'
+              env:
+                  CYPRESS_baseUrl: 'http://localhost:4173/image-grid-tool'
+
             - uses: actions/upload-artifact@v4
               with:
                   name: ui-dist

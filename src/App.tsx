@@ -311,6 +311,7 @@ function App() {
                                     variant="outline"
                                     size="sm"
                                     onClick={handleTurnLeft}
+                                    data-test-name="rotate-left"
                                 >
                                     <FaArrowRotateLeft />
                                 </IconButton>
@@ -318,6 +319,7 @@ function App() {
                                     variant="outline"
                                     size="sm"
                                     onClick={handleTurnRight}
+                                    data-test-name="rotate-right"
                                 >
                                     <FaArrowRotateRight />
                                 </IconButton>
