@@ -574,6 +574,7 @@ function App() {
                                 <Spinner
                                     size="lg"
                                     color="green.100"
+                                    data-test-name="canvas-spinner"
                                 />
                             </Center>
                         </Box>

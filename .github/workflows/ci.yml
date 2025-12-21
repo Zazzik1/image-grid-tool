@@ -45,6 +45,7 @@ jobs:
                   browser: chrome
               env:
                   CYPRESS_baseUrl: 'http://localhost:4173/image-grid-tool'
+                  CYPRESS_CI: '1'
 
             - uses: actions/upload-artifact@v4
               with:

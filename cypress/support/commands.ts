@@ -10,6 +10,7 @@ declare global {
                 downloadName?: string,
             ): Chainable;
             clearDownloads(): Chainable;
+            updateNumberInputWithLabel(label: string, value: number): Chainable;
         }
     }
 }
@@ -25,7 +26,9 @@ Cypress.Commands.add('loadImage', (name: string) => {
 Cypress.Commands.add(
     'downloadAndMatchSnapshot',
     (snapshotName: string, downloadName: string = 'test-grid.png') => {
-        cy.wait(100); // TODO: wait until login spinner disappears
+        cy.get('[data-test-name="canvas-spinner"]', { timeout: 15000 }).should(
+            'not.exist',
+        );
         cy.get('button').contains('Download image with grid').click();
 
         // wait until files exist
@@ -46,4 +49,20 @@ Cypress.Commands.add(
 Cypress.Commands.add('clearDownloads', () => {
     cy.task('clearDownloads');
 });
+
+Cypress.Commands.add(
+    'updateNumberInputWithLabel',
+    (label: string, value: number) => {
+        cy.get('label')
+            .contains(label)
+            .parent()
+            .within(() => {
+                cy.get('input[data-scope="number-input"]')
+                    .focus()
+                    .type(`{selectAll}${value}`, { delay: 50 })
+                    .blur();
+            });
+    },
+);
+
 export {};

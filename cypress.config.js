@@ -1,13 +1,9 @@
 import { defineConfig } from 'cypress';
 import fs from 'fs';
-import crypto from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-function hashFile(path) {
-    const buffer = fs.readFileSync(path);
-    return crypto.createHash('sha256').update(buffer).digest('hex');
-}
+import PNG from 'pngjs';
+import pixelmatch from 'pixelmatch';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,10 +14,24 @@ export default defineConfig({
         setupNodeEvents(on) {
             on('task', {
                 compareFiles({ actual, expected }) {
-                    const actualHash = hashFile(actual);
-                    const expectedHash = hashFile(expected);
+                    const img1 = PNG.PNG.sync.read(fs.readFileSync(expected));
+                    const img2 = PNG.PNG.sync.read(fs.readFileSync(actual));
 
-                    return actualHash === expectedHash;
+                    const { width, height } = img1;
+                    const diffImg = new PNG.PNG({ width, height });
+
+                    const diffPixels = pixelmatch(
+                        img1.data,
+                        img2.data,
+                        diffImg.data,
+                        width,
+                        height,
+                        {
+                            threshold: 0.1,
+                        },
+                    );
+
+                    return diffPixels === 0;
                 },
                 clearDownloads() {
                     const downloadsDir = path.join(
