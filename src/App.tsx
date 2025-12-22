@@ -19,11 +19,14 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FaGithub } from 'react-icons/fa';
+import { FaMinus, FaPlus } from 'react-icons/fa6';
 import { HiUpload } from 'react-icons/hi';
 import {
+    AspectRatio,
     getAspectRatio,
     getCellId,
     getGridColorSuggestion,
+    getGridStep,
     getGridSuggestion,
     getLineThicknessSuggestion,
     rotateImage,
@@ -31,6 +34,7 @@ import {
 import CroppingTool from './components/CroppingTool';
 import { FaArrowRotateLeft, FaArrowRotateRight } from 'react-icons/fa6';
 import { TbMultiplier05X, TbMultiplier2X } from 'react-icons/tb';
+import { Tooltip } from './components/ui/tooltip';
 
 function App() {
     const [rows, setRows] = useState(4);
@@ -191,19 +195,62 @@ function App() {
         () => (image ? Math.round(image.naturalHeight / rows) : 1),
         [image, rows],
     );
-    const cellAspectRatio = useMemo(
-        () => getAspectRatio(pxPerColumn, pxPerRow).label,
-        [pxPerColumn, pxPerRow],
-    );
+    const cellAspectRatio: AspectRatio = useMemo(() => {
+        if (!image) return getAspectRatio(100, 100);
+        return getAspectRatio(
+            image.naturalWidth / columns,
+            image.naturalHeight / rows,
+        );
+    }, [image, columns, rows]);
     const isMobile = useCallback(() => {
         return window.innerWidth < 600;
     }, []);
-    const canHalve = useMemo(
-        () =>
-            columns / 2 === Math.floor(columns / 2) &&
-            rows / 2 === Math.floor(rows / 2),
-        [columns, rows],
-    );
+    const gridStep = useMemo(() => {
+        return getGridStep(
+            aspectRatio?.widthComponent ?? 1,
+            aspectRatio?.heightComponent ?? 1,
+            cellAspectRatio.widthComponent,
+            cellAspectRatio.heightComponent,
+        );
+    }, [aspectRatio, cellAspectRatio]);
+    const { canHalve, canSubstract, canAdd } = useMemo(() => {
+        const c2 = columns / 2;
+        const r2 = rows / 2;
+        const canHalve = c2 === Math.floor(c2) && r2 === Math.floor(r2);
+        const newSubRatio: AspectRatio = image
+            ? getAspectRatio(
+                  image.naturalWidth / (columns - gridStep.deltaC),
+                  image.naturalHeight / (rows - gridStep.deltaR),
+              )
+            : getAspectRatio(100, 100);
+        const canSubstract =
+            columns - gridStep.deltaC > 0 &&
+            rows - gridStep.deltaR > 0 &&
+            newSubRatio.widthComponent === cellAspectRatio.widthComponent &&
+            newSubRatio.heightComponent === cellAspectRatio.heightComponent;
+        const newAddRatio: AspectRatio = image
+            ? getAspectRatio(
+                  image.naturalWidth / (columns + gridStep.deltaC),
+                  image.naturalHeight / (rows + gridStep.deltaR),
+              )
+            : getAspectRatio(100, 100);
+        const canAdd =
+            pxPerColumn > 1 &&
+            pxPerRow > 1 &&
+            newAddRatio.widthComponent === cellAspectRatio.widthComponent &&
+            newAddRatio.heightComponent === cellAspectRatio.heightComponent;
+        return { canHalve, canSubstract, canAdd };
+    }, [
+        columns,
+        rows,
+        gridStep.deltaC,
+        gridStep.deltaR,
+        pxPerColumn,
+        pxPerRow,
+        cellAspectRatio.widthComponent,
+        cellAspectRatio.heightComponent,
+        image,
+    ]);
     return (
         <Box
             display="flex"
@@ -425,38 +472,89 @@ function App() {
                             <Field.Root width="max-content">
                                 <Field.Label>&nbsp;</Field.Label>
                                 <HStack>
-                                    <IconButton
-                                        variant="outline"
-                                        padding="0 8px"
-                                        disabled={
-                                            pxPerColumn <= 1 || pxPerRow <= 1
-                                        }
-                                        onClick={() => {
-                                            setColumns(columns * 2);
-                                            setRows(rows * 2);
-                                        }}
-                                    >
-                                        <TbMultiplier2X />
-                                    </IconButton>
-                                    <IconButton
-                                        variant="outline"
-                                        padding="0 8px"
-                                        disabled={!canHalve}
-                                        onClick={() => {
-                                            if (canHalve) {
-                                                setColumns(columns / 2);
-                                                setRows(rows / 2);
+                                    <Tooltip content="Double the number of rows and columns">
+                                        <IconButton
+                                            variant="outline"
+                                            padding="0 8px"
+                                            disabled={
+                                                pxPerColumn <= 1 ||
+                                                pxPerRow <= 1
                                             }
-                                        }}
-                                    >
-                                        <TbMultiplier05X />
-                                    </IconButton>
+                                            onClick={() => {
+                                                setColumns(columns * 2);
+                                                setRows(rows * 2);
+                                            }}
+                                            data-test-name="double-grid"
+                                        >
+                                            <TbMultiplier2X />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip content="Reduce rows and columns by half">
+                                        <IconButton
+                                            variant="outline"
+                                            padding="0 8px"
+                                            disabled={!canHalve}
+                                            onClick={() => {
+                                                if (canHalve) {
+                                                    setColumns(columns / 2);
+                                                    setRows(rows / 2);
+                                                }
+                                            }}
+                                            data-test-name="halve-grid"
+                                        >
+                                            <TbMultiplier05X />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip content="Increase grid using current aspect ratio">
+                                        <IconButton
+                                            variant="outline"
+                                            padding="0 8px"
+                                            disabled={!canAdd}
+                                            onClick={() => {
+                                                if (canAdd) {
+                                                    setColumns(
+                                                        columns +
+                                                            gridStep.deltaC,
+                                                    );
+                                                    setRows(
+                                                        rows + gridStep.deltaR,
+                                                    );
+                                                }
+                                            }}
+                                            data-test-name="increase-grid"
+                                        >
+                                            <FaPlus />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip content="Decrease grid using current aspect ratio">
+                                        <IconButton
+                                            variant="outline"
+                                            padding="0 8px"
+                                            disabled={!canSubstract}
+                                            onClick={() => {
+                                                if (canSubstract) {
+                                                    setColumns(
+                                                        columns -
+                                                            gridStep.deltaC,
+                                                    );
+                                                    setRows(
+                                                        rows - gridStep.deltaR,
+                                                    );
+                                                }
+                                            }}
+                                            data-test-name="decrease-grid"
+                                        >
+                                            <FaMinus />
+                                        </IconButton>
+                                    </Tooltip>
                                 </HStack>
                             </Field.Root>
                         )}
                         <Stat.Root paddingLeft={2}>
                             <Stat.Label>Cell aspect ratio</Stat.Label>
-                            <Stat.ValueText>{cellAspectRatio}</Stat.ValueText>
+                            <Stat.ValueText data-test-name="cell-aspect-ratio">
+                                {cellAspectRatio.label}
+                            </Stat.ValueText>
                         </Stat.Root>
                     </HStack>
                     <HStack

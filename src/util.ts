@@ -204,3 +204,29 @@ export function getCellId(x: number, y: number) {
 
     return `${letters}${y + 1}`;
 }
+
+export function gcd(a: number, b: number): number {
+    if (b === 0) return Math.abs(a);
+    return gcd(b, a % b);
+}
+
+export function getGridStep(
+    gridRatioX: number,
+    gridRatioY: number,
+    cellRatioX: number,
+    cellRatioY: number,
+): {
+    deltaC: number;
+    deltaR: number;
+} {
+    // deltaC / deltaR = (gridX / gridY) * (cellY / cellX)
+    const numerator = gridRatioX * cellRatioY;
+    const denominator = gridRatioY * cellRatioX;
+
+    const commonDivisor = gcd(numerator, denominator);
+
+    return {
+        deltaC: numerator / commonDivisor,
+        deltaR: denominator / commonDivisor,
+    };
+}
