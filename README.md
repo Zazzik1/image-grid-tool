@@ -11,4 +11,4 @@ It automatically suggests the number of rows and columns so each grid cell stays
 
 ### Preview
 
-<img width="1919" height="906" alt="Image" src="https://github.com/user-attachments/assets/d24298a1-779e-4388-a9ef-5be4e814a8be" />
+<img width="1919" height="908" alt="image" src="https://github.com/user-attachments/assets/98b274a1-5ed6-49e1-89d2-46ba31706d29" />
