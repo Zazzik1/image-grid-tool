@@ -24,7 +24,7 @@ Cypress.Commands.add('loadImage', (name: string) => {
 
 Cypress.Commands.add(
     'downloadAndMatchSnapshot',
-    (snapshotName: string, downloadName: string = 'test-grid.png') => {
+    (snapshotName: string, downloadName: string = 'test-GRID.png') => {
         cy.get('[data-test-name="canvas-spinner"]', { timeout: 15000 }).should(
             'not.exist',
         );
