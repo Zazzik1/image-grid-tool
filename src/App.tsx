@@ -11,6 +11,8 @@ import {
     HStack,
     Icon,
     IconButton,
+    Input,
+    InputGroup,
     Link,
     NumberInput,
     parseColor,
@@ -41,6 +43,7 @@ import { Tooltip } from './components/ui/tooltip';
 import { COLOR } from './const';
 import { LuUpload } from 'react-icons/lu';
 import { BiReflectHorizontal, BiReflectVertical } from 'react-icons/bi';
+import { GoTrash } from 'react-icons/go';
 
 const HEADER_HEIGHT = 86;
 
@@ -63,9 +66,7 @@ function App() {
     const handleDownload = useCallback(() => {
         if (!canvasRef.current) return;
         const link = document.createElement('a');
-        const sp = filename.split('.');
-        sp.pop();
-        link.download = `${sp.join('.')}-grid.png`;
+        link.download = `${filename}.png`;
         link.href = canvasRef.current.toDataURL('image/png', 1.0);
         link.click();
     }, [filename]);
@@ -210,7 +211,7 @@ function App() {
             image.naturalHeight / rows,
         );
     }, [image, columns, rows]);
-    const isMobile = useCallback(() => {
+    const isMobile = useMemo(() => {
         return window.innerWidth < 600;
     }, []);
     const gridStep = useMemo(() => {
@@ -265,7 +266,9 @@ function App() {
             if (!file) return;
 
             setIsLoading(true);
-            setFilename(file.name);
+            const sp = file.name.split('.');
+            sp.pop();
+            setFilename(`${sp.join('.')}-GRID`);
             setError(null);
 
             const reader = new FileReader();
@@ -289,11 +292,22 @@ function App() {
         },
         [suggestGrids],
     );
+    const handleReflectVertically = useCallback<() => void>(() => {
+        // TODO
+    }, []);
+    const handleReflectHorizontally = useCallback<() => void>(() => {
+        // TODO
+    }, []);
+    const handleFilenameChange = useCallback<
+        React.ChangeEventHandler<HTMLInputElement>
+    >((e) => {
+        setFilename(e.target.value);
+    }, []);
     return (
         <Box
             display="flex"
-            flexDirection="column"
-            justifyContent={isMobile() ? 'normal' : 'center'}
+            flexDirection={isMobile ? 'block' : 'column'}
+            justifyContent={isMobile ? 'normal' : 'center'}
             flexWrap="wrap"
             height="100vh"
             minHeight="100vh"
@@ -304,7 +318,7 @@ function App() {
                 color={COLOR.TEXT2}
                 width="100%"
                 height={`${HEADER_HEIGHT}px`}
-                padding={isMobile() ? '0 8px' : '0 24px'}
+                padding={isMobile ? '0 8px' : '0 24px'}
                 borderBottom={`1px solid ${COLOR.FG2}`}
             >
                 <Box>
@@ -332,6 +346,7 @@ function App() {
             </HStack>
             <Box
                 display="flex"
+                flexDirection={isMobile ? 'column-reverse' : 'row'}
                 color={COLOR.TEXT2}
                 justifyContent="space-between"
                 alignItems="start"
@@ -345,6 +360,7 @@ function App() {
                     alignItems="center"
                     justifyContent="center"
                     height="100%"
+                    width="100%"
                     position="relative"
                 >
                     {image ? (
@@ -357,7 +373,9 @@ function App() {
                                     border: `1px solid ${COLOR.FG2}`,
                                     maxWidth: `calc(100% - 64px)`,
                                     maxHeight: `calc(100% - 64px)`,
-                                    position: 'absolute',
+                                    position: isMobile
+                                        ? 'relative'
+                                        : 'absolute',
                                     overflow: 'hidden',
                                 }}
                             ></canvas>
@@ -413,11 +431,13 @@ function App() {
                 <Stack
                     backgroundColor={COLOR.FG}
                     borderLeft={`1px solid ${COLOR.FG2}`}
-                    padding={isMobile() ? '8px 8px' : '8px 24px'}
-                    height={`calc(100vh - ${HEADER_HEIGHT}px)`}
-                    width="400px"
-                    minWidth="400px"
-                    overflowY="scroll"
+                    padding={isMobile ? '8px 8px' : '8px 24px'}
+                    height={
+                        isMobile ? 'unset' : `calc(100vh - ${HEADER_HEIGHT}px)`
+                    }
+                    width={isMobile ? '100%' : '400px'}
+                    minWidth={isMobile ? '100%' : '400px'}
+                    overflowY={isMobile ? 'unset' : 'scroll'}
                     zIndex="1"
                 >
                     <Heading
@@ -460,47 +480,78 @@ function App() {
                         {error ? <Text color="red">{error}</Text> : ''}
                     </HStack>
                     {image && (
-                        <HStack>
-                            <CroppingTool
-                                image={image}
-                                onSave={handleCropSave}
-                            />
-                            <IconButton
-                                variant="surface"
-                                size="sm"
-                                onClick={handleTurnLeft}
-                                data-test-name="rotate-left"
-                            >
-                                <FaArrowRotateLeft />
-                            </IconButton>
-                            <IconButton
-                                variant="surface"
-                                size="sm"
-                                onClick={handleTurnRight}
-                                data-test-name="rotate-right"
-                            >
-                                <FaArrowRotateRight />
-                            </IconButton>
-                            <IconButton
-                                variant="surface"
-                                size="sm"
-                                disabled
-                                data-test-name="reflect-vertical"
-                            >
-                                <BiReflectVertical />
-                            </IconButton>
-                            <IconButton
-                                variant="surface"
-                                size="sm"
-                                disabled
-                                data-test-name="reflect-horizontal"
-                            >
-                                <BiReflectHorizontal />
-                            </IconButton>
-                        </HStack>
-                    )}
-                    {image && (
                         <>
+                            <HStack>
+                                <CroppingTool
+                                    image={image}
+                                    onSave={handleCropSave}
+                                />
+                                <Tooltip content="Rotate counterclockwise">
+                                    <IconButton
+                                        variant="surface"
+                                        size="sm"
+                                        onClick={handleTurnLeft}
+                                        data-test-name="rotate-left"
+                                    >
+                                        <FaArrowRotateLeft />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip content="Rotate clockwise">
+                                    <IconButton
+                                        variant="surface"
+                                        size="sm"
+                                        onClick={handleTurnRight}
+                                        data-test-name="rotate-right"
+                                    >
+                                        <FaArrowRotateRight />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip content="Reflect vertically">
+                                    <IconButton
+                                        variant="surface"
+                                        size="sm"
+                                        disabled
+                                        onClick={handleReflectVertically}
+                                        data-test-name="reflect-vertical"
+                                    >
+                                        <BiReflectVertical />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip content="Reflect horizontally">
+                                    <IconButton
+                                        variant="surface"
+                                        size="sm"
+                                        disabled
+                                        onClick={handleReflectHorizontally}
+                                        data-test-name="reflect-horizontal"
+                                    >
+                                        <BiReflectHorizontal />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip content="Delete the image">
+                                    <IconButton
+                                        variant="surface"
+                                        size="sm"
+                                        onClick={() => setImage(null)}
+                                        data-test-name="delete-image"
+                                    >
+                                        <GoTrash />
+                                    </IconButton>
+                                </Tooltip>
+                            </HStack>
+
+                            <InputGroup
+                                endAddon=".PNG"
+                                marginBottom="4px"
+                            >
+                                <Input
+                                    width="100%"
+                                    placeholder="File name"
+                                    value={filename}
+                                    onChange={handleFilenameChange}
+                                />
+                            </InputGroup>
+
                             <HStack>
                                 <Stat.Root>
                                     <Stat.Label>Height</Stat.Label>
@@ -749,7 +800,8 @@ function App() {
                 <HStack
                     position="fixed"
                     bottom="0"
-                    right="0"
+                    right="14px"
+                    zIndex={2}
                 >
                     <Text
                         fontSize="0.8em"
