@@ -259,7 +259,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
             <Dialog.Trigger asChild>
                 <Button
                     size="sm"
-                    variant="outline"
+                    variant="surface"
                 >
                     <FaCropSimple />
                     Crop
