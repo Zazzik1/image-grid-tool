@@ -1,3 +1,4 @@
+import { COLOR } from '@/const';
 import {
     Button,
     CloseButton,
@@ -250,7 +251,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
     ]);
     return (
         <Dialog.Root
-            size="lg"
+            size="full"
             lazyMount
             open={open}
             onOpenChange={(e) => setOpen(e.open)}
@@ -259,7 +260,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
             <Dialog.Trigger asChild>
                 <Button
                     size="sm"
-                    variant="outline"
+                    variant="surface"
                 >
                     <FaCropSimple />
                     Crop
@@ -268,7 +269,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
             <Portal>
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
+                    <Dialog.Content backgroundColor={COLOR.FG}>
                         <Dialog.Header>
                             <Dialog.Title>Crop the image </Dialog.Title>
                         </Dialog.Header>
@@ -308,7 +309,9 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                         }}
                                     >
                                         <NumberInput.Control />
-                                        <NumberInput.Input />
+                                        <NumberInput.Input
+                                            backgroundColor={COLOR.BG}
+                                        />
                                     </NumberInput.Root>
                                 </Field.Root>
 
@@ -341,7 +344,9 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                         }}
                                     >
                                         <NumberInput.Control />
-                                        <NumberInput.Input />
+                                        <NumberInput.Input
+                                            backgroundColor={COLOR.BG}
+                                        />
                                     </NumberInput.Root>
                                 </Field.Root>
                                 <Checkbox.Root
@@ -381,7 +386,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                 <Button variant="outline">Cancel</Button>
                             </Dialog.ActionTrigger>
                             <Button
-                                colorPalette="green"
+                                colorPalette="blue"
                                 onClick={handleSave}
                             >
                                 Save

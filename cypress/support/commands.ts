@@ -16,20 +16,19 @@ declare global {
 }
 
 Cypress.Commands.add('loadImage', (name: string) => {
-    cy.get('[data-scope="file-upload"]')
-        .contains('Load image')
-        .parent()
-        .get('input[type="file"]')
-        .selectFile(`cypress/fixtures/${name}`, { force: true });
+    cy.get('input[type="file"][data-test-name="upload-file-input"]').selectFile(
+        `cypress/fixtures/${name}`,
+        { force: true },
+    );
 });
 
 Cypress.Commands.add(
     'downloadAndMatchSnapshot',
-    (snapshotName: string, downloadName: string = 'test-grid.png') => {
+    (snapshotName: string, downloadName: string = 'test-GRID.png') => {
         cy.get('[data-test-name="canvas-spinner"]', { timeout: 15000 }).should(
             'not.exist',
         );
-        cy.get('button').contains('Download image with grid').click();
+        cy.get('button').contains('Export').click();
 
         // wait until files exist
         cy.readFile(`cypress/downloads/${downloadName}`, 'binary', {

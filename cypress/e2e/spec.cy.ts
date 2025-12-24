@@ -107,11 +107,11 @@ const isCI = Cypress.env('CI');
         cy.loadImage('test.jpg');
     });
     it('renders diagonals', () => {
-        cy.get('label').contains('Add diagonals?').click();
+        cy.get('label').contains('Diagonals').click();
         cy.downloadAndMatchSnapshot('test-diagonals.png');
     });
     it('adds cell ids', () => {
-        cy.get('label').contains('Add cell ids?').click();
+        cy.get('label').contains('Cell IDs').click();
         cy.downloadAndMatchSnapshot('test-cell-ids.png');
     });
 });
