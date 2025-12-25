@@ -230,3 +230,50 @@ export function getGridStep(
         deltaR: denominator / commonDivisor,
     };
 }
+
+export function mirrorImageVertically(
+    image: HTMLImageElement,
+): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('ctx == null'));
+
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+
+        ctx.save();
+        ctx.scale(1, -1);
+        ctx.translate(0, -image.naturalHeight);
+        ctx.drawImage(image, 0, 0);
+        ctx.restore();
+
+        const newImage = new Image();
+        newImage.onload = () => resolve(newImage);
+        newImage.onerror = reject;
+        newImage.src = canvas.toDataURL();
+    });
+}
+export function mirrorImageHorizontally(
+    image: HTMLImageElement,
+): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('ctx == null'));
+
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+
+        ctx.save();
+        ctx.scale(-1, 1);
+        ctx.translate(-image.naturalWidth, 0);
+        ctx.drawImage(image, 0, 0);
+        ctx.restore();
+
+        const newImage = new Image();
+        newImage.onload = () => resolve(newImage);
+        newImage.onerror = reject;
+        newImage.src = canvas.toDataURL();
+    });
+}

@@ -34,6 +34,8 @@ import {
     getGridStep,
     getGridSuggestion,
     getLineThicknessSuggestion,
+    mirrorImageHorizontally,
+    mirrorImageVertically,
     rotateImage,
 } from './util';
 import CroppingTool from './components/CroppingTool';
@@ -293,11 +295,15 @@ function App() {
         [suggestGrids],
     );
     const handleReflectVertically = useCallback<() => void>(() => {
-        // TODO
-    }, []);
+        if (!image) return;
+        setIsLoading(true);
+        mirrorImageVertically(image).then(setImage);
+    }, [image]);
     const handleReflectHorizontally = useCallback<() => void>(() => {
-        // TODO
-    }, []);
+        if (!image) return;
+        setIsLoading(true);
+        mirrorImageHorizontally(image).then(setImage);
+    }, [image]);
     const handleFilenameChange = useCallback<
         React.ChangeEventHandler<HTMLInputElement>
     >((e) => {
@@ -510,22 +516,20 @@ function App() {
                                     <IconButton
                                         variant="surface"
                                         size="sm"
-                                        disabled
                                         onClick={handleReflectVertically}
-                                        data-test-name="reflect-vertical"
+                                        data-test-name="reflect-vertically"
                                     >
-                                        <BiReflectVertical />
+                                        <BiReflectHorizontal />
                                     </IconButton>
                                 </Tooltip>
                                 <Tooltip content="Reflect horizontally">
                                     <IconButton
                                         variant="surface"
                                         size="sm"
-                                        disabled
                                         onClick={handleReflectHorizontally}
-                                        data-test-name="reflect-horizontal"
+                                        data-test-name="reflect-horizontally"
                                     >
-                                        <BiReflectHorizontal />
+                                        <BiReflectVertical />
                                     </IconButton>
                                 </Tooltip>
                                 <Tooltip content="Delete the image">

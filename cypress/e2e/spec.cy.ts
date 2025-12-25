@@ -83,17 +83,47 @@ describe('page', () => {
 
         ratioEl.should('have.text', '10:21');
 
+        let lastRow = 0;
+        cy.getValueOfNumericInputWithLabel('Number of rows').then((value) => {
+            lastRow = value;
+        });
         for (let i = 0; i < 10; i++) {
             increaseButton.click();
-            cy.wait(100);
+            cy.getValueOfNumericInputWithLabel('Number of rows').then(
+                (value) => {
+                    expect(value).not.to.eq(lastRow);
+                    lastRow = value;
+                },
+            );
             ratioEl.should('have.text', '10:21');
         }
 
         for (let i = 0; i < 10; i++) {
             decreaseButton.click();
-            cy.wait(100);
+            cy.getValueOfNumericInputWithLabel('Number of rows').then(
+                (value) => {
+                    expect(value).not.to.eq(lastRow);
+                    lastRow = value;
+                },
+            );
             ratioEl.should('have.text', '10:21');
         }
+    });
+    it('reflect horizontally button should work', () => {
+        const button = cy.get('[data-test-name="reflect-horizontally"]');
+        button.click();
+        cy.downloadAndMatchSnapshot('test-reflected-horizontally.png');
+        cy.clearDownloads();
+        button.click();
+        cy.downloadAndMatchSnapshot('test-default.png');
+    });
+    it('reflect vertically button should work', () => {
+        const button = cy.get('[data-test-name="reflect-vertically"]');
+        button.click();
+        cy.downloadAndMatchSnapshot('test-reflected-vertically.png');
+        cy.clearDownloads();
+        button.click();
+        cy.downloadAndMatchSnapshot('test-default.png');
     });
 });
 

@@ -11,6 +11,7 @@ declare global {
             ): Chainable;
             clearDownloads(): Chainable;
             updateNumberInputWithLabel(label: string, value: number): Chainable;
+            getValueOfNumericInputWithLabel(label: string): Chainable<number>;
         }
     }
 }
@@ -47,6 +48,16 @@ Cypress.Commands.add(
 
 Cypress.Commands.add('clearDownloads', () => {
     cy.task('clearDownloads');
+});
+
+Cypress.Commands.add('getValueOfNumericInputWithLabel', (label: string) => {
+    return cy
+        .get('label')
+        .contains(label)
+        .parent()
+        .find('input[data-scope="number-input"]')
+        .invoke('val')
+        .then((value) => Number(value));
 });
 
 Cypress.Commands.add(
