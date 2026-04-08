@@ -277,3 +277,39 @@ export function mirrorImageHorizontally(
         newImage.src = canvas.toDataURL();
     });
 }
+
+/**
+ * @param imageData image data to process
+ * @param min 0-100
+ * @param max 0-100
+ * @returns
+ */
+export function thresholdImage(
+    imageData: ImageData,
+    min: number,
+    max: number,
+): ImageData {
+    const { width, height, data } = imageData;
+
+    const minVal = min / 100;
+    const maxVal = max / 100;
+
+    const output = new ImageData(width, height);
+    const out = output.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        const luminance = getLuminance(r, g, b);
+        const value = luminance >= minVal && luminance <= maxVal ? 255 : 0;
+
+        out[i] = value; // r
+        out[i + 1] = value; // g
+        out[i + 2] = value; // b
+        out[i + 3] = 255; // alpha
+    }
+
+    return output;
+}
