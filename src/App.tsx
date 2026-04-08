@@ -46,6 +46,7 @@ import { COLOR } from './const';
 import { LuUpload } from 'react-icons/lu';
 import { BiReflectHorizontal, BiReflectVertical } from 'react-icons/bi';
 import { GoTrash } from 'react-icons/go';
+import TresholdingTool from './components/TresholdingTool';
 
 const HEADER_HEIGHT = 86;
 
@@ -105,7 +106,7 @@ function App() {
         });
     }, [image, suggestGrids]);
 
-    const handleCropSave = useCallback(
+    const handleImageUpdate = useCallback(
         (image: HTMLImageElement) => {
             setImage(image);
             setAspectRatio(getAspectRatio(image.width, image.height));
@@ -490,7 +491,7 @@ function App() {
                             <HStack>
                                 <CroppingTool
                                     image={image}
-                                    onSave={handleCropSave}
+                                    onSave={handleImageUpdate}
                                 />
                                 <Tooltip content="Rotate counterclockwise">
                                     <IconButton
@@ -542,6 +543,12 @@ function App() {
                                         <GoTrash />
                                     </IconButton>
                                 </Tooltip>
+                            </HStack>
+                            <HStack>
+                                <TresholdingTool
+                                    image={image}
+                                    onSave={handleImageUpdate}
+                                />
                             </HStack>
 
                             <InputGroup

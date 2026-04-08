@@ -4,8 +4,13 @@ import {
     getGridSuggestion,
     getLineThicknessSuggestion,
     GridSuggestion,
+    thresholdImage,
 } from '@/util';
 import { describe, expect, it } from 'vitest';
+import { ImageData } from 'canvas';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(global as any).ImageData = ImageData;
 
 type Result = ReturnType<typeof getAspectRatio>;
 
@@ -108,5 +113,43 @@ describe('getCellId', () => {
         expect(getCellId(52, 4)).toBe('BA5');
         expect(getCellId(54, 4)).toBe('BC5');
         expect(getCellId(701, 4)).toBe('ZZ5');
+    });
+});
+
+describe('thresholdImage', () => {
+    it('converts image to black and white correctly', () => {
+        const width = 2;
+        const height = 2;
+
+        // [R, G, B, A, R, G, B, A, ...]
+        const data = new Uint8ClampedArray([
+            0, 0, 0, 255,
+
+            255, 255, 255, 255,
+
+            128, 128, 128, 255,
+
+            200, 50, 50, 255,
+        ]);
+
+        const imageData = new ImageData(data, width, height);
+
+        const min = 20;
+        const max = 60;
+
+        // @ts-expect-error mocked ImageData
+        const result = thresholdImage(imageData, min, max);
+
+        const expected = new Uint8ClampedArray([
+            0, 0, 0, 255,
+
+            0, 0, 0, 255,
+
+            255, 255, 255, 255,
+
+            0, 0, 0, 255,
+        ]);
+
+        expect(result.data).toEqual(expected);
     });
 });
