@@ -313,3 +313,55 @@ export function thresholdImage(
 
     return output;
 }
+
+export function logTransformImage(imageData: ImageData): ImageData {
+    const { width, height, data } = imageData;
+
+    const output = new ImageData(width, height);
+    const out = output.data;
+
+    const cx = width / 2;
+    const cy = height / 2;
+
+    // maximum radius to fit inside image
+    const maxRadius = Math.min(cx, cy);
+    const logMaxR = Math.log(maxRadius);
+
+    const epsilon = 1e-6;
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            // map pixels to log-polar space
+            const a = (x / width) * logMaxR + epsilon;
+            const b = (y / height) * 2 * Math.PI - Math.PI;
+
+            // inverse log:
+            // w = e^(a + ib) = (e^a) * (cosb + i*sinb))
+            // r = sqrt((e^a * cosb)^2 + (e^a * sinb)^2) = e^a
+            // theta = b
+            const r = Math.exp(a);
+
+            const srcX = Math.floor(cx + r * Math.cos(b));
+            const srcY = Math.floor(cy + r * Math.sin(b));
+
+            const dstIdx = (y * width + x) * 4;
+
+            if (srcX >= 0 && srcX < width && srcY >= 0 && srcY < height) {
+                const srcIdx = (srcY * width + srcX) * 4;
+
+                out[dstIdx] = data[srcIdx];
+                out[dstIdx + 1] = data[srcIdx + 1];
+                out[dstIdx + 2] = data[srcIdx + 2];
+                out[dstIdx + 3] = data[srcIdx + 3];
+            } else {
+                // fill missing pixels (transparent)
+                out[dstIdx] = 0;
+                out[dstIdx + 1] = 0;
+                out[dstIdx + 2] = 0;
+                out[dstIdx + 3] = 0;
+            }
+        }
+    }
+
+    return output;
+}
