@@ -2,7 +2,7 @@ import { COLOR } from '@/const';
 import { Button, CloseButton, Dialog, Portal } from '@chakra-ui/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { PiSpiral } from 'react-icons/pi';
-import { logTransformImage } from '@/util';
+import { applyLogPolarTransform } from '@/util';
 
 type Props = {
     image: HTMLImageElement;
@@ -65,7 +65,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                 canvas.width,
                 canvas.height,
             );
-            const result = logTransformImage(imageData);
+            const result = applyLogPolarTransform(imageData);
             ctx.putImageData(result, 0, 0);
         });
         return () => {

@@ -314,7 +314,10 @@ export function thresholdImage(
     return output;
 }
 
-export function logTransformImage(imageData: ImageData): ImageData {
+/**
+ * Applies a log-polar transformation using a complex logarithmic mapping.
+ */
+export function applyLogPolarTransform(imageData: ImageData): ImageData {
     const { width, height, data } = imageData;
 
     const output = new ImageData(width, height);
@@ -364,4 +367,23 @@ export function logTransformImage(imageData: ImageData): ImageData {
     }
 
     return output;
+}
+
+/**
+ * Applies the complex exponential transform `e^z`, where `z = a + ib` is derived from pixel coordinates.
+ */
+export function applyComplexExpTransform(imageData: ImageData): ImageData {
+    return imageData; // TODO
+}
+
+/**
+ * Applies a scaling and rotation to the image by multiplying each pixel position
+ * by the complex number `z = a + ib`.
+ */
+export function scaleAndRotateImage(
+    imageData: ImageData,
+    // a: number,
+    // b: number,
+): ImageData {
+    return imageData; // TODO
 }
