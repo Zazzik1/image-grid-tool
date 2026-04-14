@@ -382,8 +382,9 @@ export function applyComplexExpTransform(imageData: ImageData): ImageData {
  */
 export function scaleAndRotateImage(
     imageData: ImageData,
-    // a: number,
-    // b: number,
+    a: number,
+    b: number,
 ): ImageData {
+    console.log({ a, b }); // TODO: remove
     return imageData; // TODO
 }
