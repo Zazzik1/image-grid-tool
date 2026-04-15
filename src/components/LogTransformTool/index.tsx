@@ -162,7 +162,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                     <Card.Root size="sm">
                                         <Card.Header>
                                             <Heading size="md">
-                                                Complex logarythmic transform
+                                                Complex logarithmic transform
                                             </Heading>
                                         </Card.Header>
                                         <Card.Body color="fg.muted">
@@ -173,7 +173,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                     setModes((old) => ({
                                                         ...old,
                                                         logTransform:
-                                                            !e.checked,
+                                                            !!e.checked,
                                                     }));
                                                 }}
                                             >
@@ -205,7 +205,8 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                         ...old,
                                                         multiplyTransform: {
                                                             ...old.multiplyTransform,
-                                                            enabled: !e.checked,
+                                                            enabled:
+                                                                !!e.checked,
                                                         },
                                                     }));
                                                 }}
@@ -225,13 +226,14 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                             <HStack>
                                                 <Field.Root width="max-content">
                                                     <Field.Label>
-                                                        real component
+                                                        Re
                                                     </Field.Label>
                                                     <NumberInput.Root
                                                         backgroundColor={
                                                             COLOR.BG
                                                         }
                                                         maxW="160px"
+                                                        step={0.05}
                                                         value={modes.multiplyTransform.z.a.toString()}
                                                         disabled={
                                                             !modes
@@ -262,13 +264,14 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                 </Field.Root>
                                                 <Field.Root width="max-content">
                                                     <Field.Label>
-                                                        imaginary component
+                                                        Im
                                                     </Field.Label>
                                                     <NumberInput.Root
                                                         backgroundColor={
                                                             COLOR.BG
                                                         }
                                                         maxW="160px"
+                                                        step={0.05}
                                                         value={modes.multiplyTransform.z.b.toString()}
                                                         disabled={
                                                             !modes
@@ -314,7 +317,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                     setModes((old) => ({
                                                         ...old,
                                                         expTransform:
-                                                            !e.checked,
+                                                            !!e.checked,
                                                     }));
                                                 }}
                                             >

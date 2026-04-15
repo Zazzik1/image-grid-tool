@@ -385,6 +385,44 @@ export function scaleAndRotateImage(
     a: number,
     b: number,
 ): ImageData {
-    console.log({ a, b }); // TODO: remove
-    return imageData; // TODO
+    const { width, height, data } = imageData;
+
+    const output = new ImageData(width, height);
+    const out = output.data;
+
+    const cx = width / 2;
+    const cy = height / 2;
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            // move to center
+            const c = x - cx;
+            const d = y - cy;
+
+            // (a+ib) * (c+id) = ac + iad + ibc - db = (ac - db) + i(ad + bc)
+            const denom = a * a + b * b;
+            const tx = (a * c + b * d) / denom;
+            const ty = (a * d - b * c) / denom;
+
+            const srcX = Math.floor(tx + cx);
+            const srcY = Math.floor(ty + cy);
+
+            const dstIdx = (y * width + x) * 4;
+
+            if (srcX >= 0 && srcX < width && srcY >= 0 && srcY < height) {
+                const srcIdx = (srcY * width + srcX) * 4;
+
+                out[dstIdx] = data[srcIdx];
+                out[dstIdx + 1] = data[srcIdx + 1];
+                out[dstIdx + 2] = data[srcIdx + 2];
+                out[dstIdx + 3] = data[srcIdx + 3];
+            } else {
+                out[dstIdx] = 0;
+                out[dstIdx + 1] = 0;
+                out[dstIdx + 2] = 0;
+                out[dstIdx + 3] = 0;
+            }
+        }
+    }
+    return output;
 }
