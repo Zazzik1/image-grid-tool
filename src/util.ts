@@ -373,7 +373,53 @@ export function applyLogPolarTransform(imageData: ImageData): ImageData {
  * Applies the complex exponential transform `e^z`, where `z = a + ib` is derived from pixel coordinates.
  */
 export function applyComplexExpTransform(imageData: ImageData): ImageData {
-    return imageData; // TODO
+    const { width, height, data } = imageData;
+
+    const output = new ImageData(width, height);
+    const out = output.data;
+
+    const cx = width / 2;
+    const cy = height / 2;
+
+    const maxRadius = Math.min(cx, cy);
+    const logMaxR = Math.log(maxRadius);
+
+    const epsilon = 1e-6;
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const dx = x - cx;
+            const dy = y - cy;
+
+            const r = Math.sqrt(dx * dx + dy * dy) + epsilon;
+            const theta = Math.atan2(dy, dx);
+
+            // apply log (inverse of exp)
+            const a = Math.log(r);
+            const b = theta;
+
+            const srcX = Math.floor((a / logMaxR) * width);
+            const srcY = Math.floor(((b + Math.PI) / (2 * Math.PI)) * height);
+
+            const dstIdx = (y * width + x) * 4;
+
+            if (srcX >= 0 && srcX < width && srcY >= 0 && srcY < height) {
+                const srcIdx = (srcY * width + srcX) * 4;
+
+                out[dstIdx] = data[srcIdx];
+                out[dstIdx + 1] = data[srcIdx + 1];
+                out[dstIdx + 2] = data[srcIdx + 2];
+                out[dstIdx + 3] = data[srcIdx + 3];
+            } else {
+                out[dstIdx] = 0;
+                out[dstIdx + 1] = 0;
+                out[dstIdx + 2] = 0;
+                out[dstIdx + 3] = 0;
+            }
+        }
+    }
+
+    return output;
 }
 
 /**

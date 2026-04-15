@@ -42,9 +42,9 @@ const DEFAULT_MODES: Modes = {
     logTransform: true,
     multiplyTransform: {
         enabled: true,
-        z: { a: 1, b: 0 },
+        z: { a: 1.06, b: -0.02 },
     },
-    expTransform: false,
+    expTransform: true,
 };
 
 const LogTransformTool = ({ image, onSave }: Props) => {
@@ -144,7 +144,9 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                 <Dialog.Positioner>
                     <Dialog.Content backgroundColor={COLOR.FG}>
                         <Dialog.Header>
-                            <Dialog.Title>Transforms</Dialog.Title>
+                            <Dialog.Title>
+                                Complex Transformation Tool
+                            </Dialog.Title>
                         </Dialog.Header>
                         <Dialog.Body
                             ref={bodyRef}
@@ -153,7 +155,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                             flexWrap="wrap"
                         >
                             <Box>
-                                <Heading>Preview</Heading>
+                                <Heading>Output Preview</Heading>
                                 <canvas ref={canvasRef} />
                             </Box>
                             <Box width="600px">
@@ -233,7 +235,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                             COLOR.BG
                                                         }
                                                         maxW="160px"
-                                                        step={0.05}
+                                                        step={0.01}
                                                         value={modes.multiplyTransform.z.a.toString()}
                                                         disabled={
                                                             !modes
@@ -271,7 +273,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                             COLOR.BG
                                                         }
                                                         maxW="160px"
-                                                        step={0.05}
+                                                        step={0.01}
                                                         value={modes.multiplyTransform.z.b.toString()}
                                                         disabled={
                                                             !modes
