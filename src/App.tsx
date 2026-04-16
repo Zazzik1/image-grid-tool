@@ -47,6 +47,7 @@ import { LuUpload } from 'react-icons/lu';
 import { BiReflectHorizontal, BiReflectVertical } from 'react-icons/bi';
 import { GoTrash } from 'react-icons/go';
 import TresholdingTool from './components/TresholdingTool';
+import LogTransformTool from './components/LogTransformTool';
 
 const HEADER_HEIGHT = 86;
 
@@ -546,6 +547,10 @@ function App() {
                             </HStack>
                             <HStack>
                                 <TresholdingTool
+                                    image={image}
+                                    onSave={handleImageUpdate}
+                                />
+                                <LogTransformTool
                                     image={image}
                                     onSave={handleImageUpdate}
                                 />

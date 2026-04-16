@@ -313,3 +313,224 @@ export function thresholdImage(
 
     return output;
 }
+
+/**
+ * Applies a log-polar transformation using a complex logarithmic mapping.
+ */
+export function applyLogPolarTransform(imageData: ImageData): ImageData {
+    const { width, height, data } = imageData;
+
+    const output = new ImageData(width, height);
+    const out = output.data;
+
+    const cx = width / 2;
+    const cy = height / 2;
+
+    // maximum radius to fit inside image
+    const maxRadius = Math.min(cx, cy);
+    const logMaxR = Math.log(maxRadius);
+
+    const epsilon = 1e-6;
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            // map pixels to log-polar space
+            const a = (x / width) * logMaxR + epsilon;
+            const b = (y / height) * 2 * Math.PI - Math.PI;
+
+            // inverse log:
+            // w = e^(a + ib) = (e^a) * (cosb + i*sinb))
+            // r = sqrt((e^a * cosb)^2 + (e^a * sinb)^2) = e^a
+            // theta = b
+            const r = Math.exp(a);
+
+            const srcX = Math.floor(cx + r * Math.cos(b));
+            const srcY = Math.floor(cy + r * Math.sin(b));
+
+            const dstIdx = (y * width + x) * 4;
+
+            if (srcX >= 0 && srcX < width && srcY >= 0 && srcY < height) {
+                const srcIdx = (srcY * width + srcX) * 4;
+
+                out[dstIdx] = data[srcIdx];
+                out[dstIdx + 1] = data[srcIdx + 1];
+                out[dstIdx + 2] = data[srcIdx + 2];
+                out[dstIdx + 3] = data[srcIdx + 3];
+            } else {
+                // fill missing pixels (transparent)
+                out[dstIdx] = 0;
+                out[dstIdx + 1] = 0;
+                out[dstIdx + 2] = 0;
+                out[dstIdx + 3] = 0;
+            }
+        }
+    }
+
+    return output;
+}
+
+/**
+ * Applies the complex exponential transform `e^z`, where `z = a + ib` is derived from pixel coordinates.
+ */
+export function applyComplexExpTransform(imageData: ImageData): ImageData {
+    const { width, height, data } = imageData;
+
+    const output = new ImageData(width, height);
+    const out = output.data;
+
+    const cx = width / 2;
+    const cy = height / 2;
+
+    const maxRadius = Math.min(cx, cy);
+    const logMaxR = Math.log(maxRadius);
+
+    const epsilon = 1e-6;
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const dx = x - cx;
+            const dy = y - cy;
+
+            const r = Math.sqrt(dx * dx + dy * dy) + epsilon;
+            const theta = Math.atan2(dy, dx);
+
+            // apply log (inverse of exp)
+            const a = Math.log(r);
+            const b = theta;
+
+            const srcX = Math.floor((a / logMaxR) * width);
+            const srcY = Math.floor(((b + Math.PI) / (2 * Math.PI)) * height);
+
+            const dstIdx = (y * width + x) * 4;
+
+            if (srcX >= 0 && srcX < width && srcY >= 0 && srcY < height) {
+                const srcIdx = (srcY * width + srcX) * 4;
+
+                out[dstIdx] = data[srcIdx];
+                out[dstIdx + 1] = data[srcIdx + 1];
+                out[dstIdx + 2] = data[srcIdx + 2];
+                out[dstIdx + 3] = data[srcIdx + 3];
+            } else {
+                out[dstIdx] = 0;
+                out[dstIdx + 1] = 0;
+                out[dstIdx + 2] = 0;
+                out[dstIdx + 3] = 0;
+            }
+        }
+    }
+
+    return output;
+}
+
+/**
+ * Applies a scaling and rotation to the image by multiplying each pixel position
+ * by the complex number `z = a + ib`.
+ */
+export function scaleAndRotateImage(
+    imageData: ImageData,
+    a: number,
+    b: number,
+): ImageData {
+    const { width, height, data } = imageData;
+
+    const output = new ImageData(width, height);
+    const out = output.data;
+
+    const cx = width / 2;
+    const cy = height / 2;
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            // move to center
+            const c = x - cx;
+            const d = y - cy;
+
+            // (a+ib) * (c+id) = ac + iad + ibc - db = (ac - db) + i(ad + bc)
+            const denom = a * a + b * b;
+            const tx = (a * c + b * d) / denom;
+            const ty = (a * d - b * c) / denom;
+
+            const srcX = Math.floor(tx + cx);
+            const srcY = Math.floor(ty + cy);
+
+            const dstIdx = (y * width + x) * 4;
+
+            if (srcX >= 0 && srcX < width && srcY >= 0 && srcY < height) {
+                const srcIdx = (srcY * width + srcX) * 4;
+
+                out[dstIdx] = data[srcIdx];
+                out[dstIdx + 1] = data[srcIdx + 1];
+                out[dstIdx + 2] = data[srcIdx + 2];
+                out[dstIdx + 3] = data[srcIdx + 3];
+            } else {
+                out[dstIdx] = 0;
+                out[dstIdx + 1] = 0;
+                out[dstIdx + 2] = 0;
+                out[dstIdx + 3] = 0;
+            }
+        }
+    }
+    return output;
+}
+
+export function stackImageInGrid(
+    imageData: ImageData,
+    grid: number = 3,
+): ImageData {
+    const sw = imageData.width;
+    const sh = imageData.height;
+    const tw = sw * grid;
+    const th = sh * grid;
+
+    const newData = new Uint8ClampedArray(tw * th * 4);
+
+    for (let y = 0; y < sh; y++) {
+        const rowStart = y * sw * 4;
+        const rowEnd = rowStart + sw * 4;
+        const sourceRow = imageData.data.subarray(rowStart, rowEnd);
+
+        for (let rowOffset = 0; rowOffset < grid; rowOffset++) {
+            const targetY = y + rowOffset * sh;
+
+            for (let colOffset = 0; colOffset < grid; colOffset++) {
+                const targetX = colOffset * sw;
+
+                const targetIndex = (targetY * tw + targetX) * 4;
+
+                newData.set(sourceRow, targetIndex);
+            }
+        }
+    }
+
+    return new ImageData(newData, tw, th);
+}
+
+export function getCenterPartOfGrid(
+    imageData: ImageData,
+    grid: number = 3,
+): ImageData {
+    const { data, width, height } = imageData;
+
+    const cellWidth = Math.floor(width / grid);
+    const cellHeight = Math.floor(height / grid);
+
+    const startX = Math.floor((width - cellWidth) / 2);
+    const startY = Math.floor((height - cellHeight) / 2);
+
+    const output = new ImageData(cellWidth, cellHeight);
+    const out = output.data;
+
+    for (let y = 0; y < cellHeight; y++) {
+        for (let x = 0; x < cellWidth; x++) {
+            const srcIdx = ((y + startY) * width + (x + startX)) * 4;
+            const dstIdx = (y * cellWidth + x) * 4;
+
+            out[dstIdx] = data[srcIdx];
+            out[dstIdx + 1] = data[srcIdx + 1];
+            out[dstIdx + 2] = data[srcIdx + 2];
+            out[dstIdx + 3] = data[srcIdx + 3];
+        }
+    }
+
+    return output;
+}
