@@ -19,7 +19,9 @@ import { PiSpiral } from 'react-icons/pi';
 import {
     applyComplexExpTransform,
     applyLogPolarTransform,
+    getCenterPartOfGrid,
     scaleAndRotateImage,
+    stackImageInGrid,
 } from '@/util';
 
 type Props = {
@@ -31,18 +33,34 @@ type Complex = { a: number; b: number };
 
 type Modes = {
     logTransform: boolean;
+    stackImage: {
+        enabled: boolean;
+        grid: number;
+    };
     multiplyTransform: {
         enabled: boolean;
         z: Complex;
+    };
+    getCenterOfImage: {
+        enabled: boolean;
+        grid: number;
     };
     expTransform: boolean;
 };
 
 const DEFAULT_MODES: Modes = {
     logTransform: true,
+    stackImage: {
+        enabled: true,
+        grid: 3,
+    },
     multiplyTransform: {
         enabled: true,
         z: { a: 1.06, b: -0.02 },
+    },
+    getCenterOfImage: {
+        enabled: true,
+        grid: 3,
     },
     expTransform: true,
 };
@@ -94,9 +112,13 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                 canvas.width,
                 canvas.height,
             );
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             let result = imageData;
             if (modes.logTransform) {
                 result = applyLogPolarTransform(result);
+            }
+            if (modes.stackImage.enabled) {
+                result = stackImageInGrid(result, modes.stackImage.grid);
             }
             if (modes.multiplyTransform.enabled) {
                 result = scaleAndRotateImage(
@@ -105,9 +127,21 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                     modes.multiplyTransform.z.b,
                 );
             }
+            if (modes.getCenterOfImage.enabled) {
+                result = getCenterPartOfGrid(
+                    result,
+                    modes.getCenterOfImage.grid,
+                );
+            }
             if (modes.expTransform) {
                 result = applyComplexExpTransform(result);
             }
+
+            canvas.width = result.width;
+            canvas.height = result.height;
+            canvas.style.height = `${height}px`;
+            canvas.style.width = `${(result.width / result.height) * height}px`;
+
             ctx.putImageData(result, 0, 0);
         });
         return () => {
@@ -121,6 +155,10 @@ const LogTransformTool = ({ image, onSave }: Props) => {
         modes.multiplyTransform.enabled,
         modes.multiplyTransform.z.a,
         modes.multiplyTransform.z.b,
+        modes.stackImage.enabled,
+        modes.stackImage.grid,
+        modes.getCenterOfImage.enabled,
+        modes.getCenterOfImage.grid,
     ]);
 
     return (
@@ -187,6 +225,77 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                     Enabled
                                                 </Checkbox.Label>
                                             </Checkbox.Root>
+                                        </Card.Body>
+                                    </Card.Root>
+                                    <Card.Root size="sm">
+                                        <Card.Header>
+                                            <Heading size="md">
+                                                Duplicate image
+                                            </Heading>
+                                        </Card.Header>
+                                        <Card.Body color="fg.muted">
+                                            <Checkbox.Root
+                                                width="max-content"
+                                                checked={
+                                                    modes.stackImage.enabled
+                                                }
+                                                onCheckedChange={(e) => {
+                                                    setModes((old) => ({
+                                                        ...old,
+                                                        stackImage: {
+                                                            ...old.stackImage,
+                                                            enabled:
+                                                                !!e.checked,
+                                                        },
+                                                    }));
+                                                }}
+                                            >
+                                                <Checkbox.HiddenInput />
+                                                <Checkbox.Control
+                                                    borderColor={COLOR.FG2}
+                                                />
+                                                <Checkbox.Label>
+                                                    Enabled
+                                                </Checkbox.Label>
+                                            </Checkbox.Root>
+                                            <Separator
+                                                marginTop="16px"
+                                                marginBottom="16px"
+                                            />
+                                            <HStack>
+                                                <Field.Root width="max-content">
+                                                    <Field.Label>
+                                                        Duplicates
+                                                    </Field.Label>
+                                                    <NumberInput.Root
+                                                        backgroundColor={
+                                                            COLOR.BG
+                                                        }
+                                                        maxW="160px"
+                                                        min={1}
+                                                        step={2}
+                                                        value={modes.stackImage.grid.toString()}
+                                                        disabled={
+                                                            !modes.stackImage
+                                                                .enabled
+                                                        }
+                                                        onValueChange={(e: {
+                                                            valueAsNumber: number;
+                                                        }) =>
+                                                            setModes((old) => ({
+                                                                ...old,
+                                                                stackImage: {
+                                                                    ...old.stackImage,
+                                                                    grid: e.valueAsNumber,
+                                                                },
+                                                            }))
+                                                        }
+                                                    >
+                                                        <NumberInput.Control />
+                                                        <NumberInput.Input />
+                                                    </NumberInput.Root>
+                                                </Field.Root>
+                                            </HStack>
                                         </Card.Body>
                                     </Card.Root>
                                     <Card.Root size="sm">
@@ -294,6 +403,81 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                                                 .z,
                                                                             b: e.valueAsNumber,
                                                                         },
+                                                                    },
+                                                            }))
+                                                        }
+                                                    >
+                                                        <NumberInput.Control />
+                                                        <NumberInput.Input />
+                                                    </NumberInput.Root>
+                                                </Field.Root>
+                                            </HStack>
+                                        </Card.Body>
+                                    </Card.Root>
+                                    <Card.Root size="sm">
+                                        <Card.Header>
+                                            <Heading size="md">
+                                                Deduplicate image (crop center
+                                                part)
+                                            </Heading>
+                                        </Card.Header>
+                                        <Card.Body color="fg.muted">
+                                            <Checkbox.Root
+                                                width="max-content"
+                                                checked={
+                                                    modes.getCenterOfImage
+                                                        .enabled
+                                                }
+                                                onCheckedChange={(e) => {
+                                                    setModes((old) => ({
+                                                        ...old,
+                                                        getCenterOfImage: {
+                                                            ...old.getCenterOfImage,
+                                                            enabled:
+                                                                !!e.checked,
+                                                        },
+                                                    }));
+                                                }}
+                                            >
+                                                <Checkbox.HiddenInput />
+                                                <Checkbox.Control
+                                                    borderColor={COLOR.FG2}
+                                                />
+                                                <Checkbox.Label>
+                                                    Enabled
+                                                </Checkbox.Label>
+                                            </Checkbox.Root>
+                                            <Separator
+                                                marginTop="16px"
+                                                marginBottom="16px"
+                                            />
+                                            <HStack>
+                                                <Field.Root width="max-content">
+                                                    <Field.Label>
+                                                        Duplicates
+                                                    </Field.Label>
+                                                    <NumberInput.Root
+                                                        backgroundColor={
+                                                            COLOR.BG
+                                                        }
+                                                        maxW="160px"
+                                                        min={1}
+                                                        step={2}
+                                                        value={modes.getCenterOfImage.grid.toString()}
+                                                        disabled={
+                                                            !modes
+                                                                .getCenterOfImage
+                                                                .enabled
+                                                        }
+                                                        onValueChange={(e: {
+                                                            valueAsNumber: number;
+                                                        }) =>
+                                                            setModes((old) => ({
+                                                                ...old,
+                                                                getCenterOfImage:
+                                                                    {
+                                                                        ...old.getCenterOfImage,
+                                                                        grid: e.valueAsNumber,
                                                                     },
                                                             }))
                                                         }

@@ -472,3 +472,65 @@ export function scaleAndRotateImage(
     }
     return output;
 }
+
+export function stackImageInGrid(
+    imageData: ImageData,
+    grid: number = 3,
+): ImageData {
+    const sw = imageData.width;
+    const sh = imageData.height;
+    const tw = sw * grid;
+    const th = sh * grid;
+
+    const newData = new Uint8ClampedArray(tw * th * 4);
+
+    for (let y = 0; y < sh; y++) {
+        const rowStart = y * sw * 4;
+        const rowEnd = rowStart + sw * 4;
+        const sourceRow = imageData.data.subarray(rowStart, rowEnd);
+
+        for (let rowOffset = 0; rowOffset < grid; rowOffset++) {
+            const targetY = y + rowOffset * sh;
+
+            for (let colOffset = 0; colOffset < grid; colOffset++) {
+                const targetX = colOffset * sw;
+
+                const targetIndex = (targetY * tw + targetX) * 4;
+
+                newData.set(sourceRow, targetIndex);
+            }
+        }
+    }
+
+    return new ImageData(newData, tw, th);
+}
+
+export function getCenterPartOfGrid(
+    imageData: ImageData,
+    grid: number = 3,
+): ImageData {
+    const { data, width, height } = imageData;
+
+    const cellWidth = Math.floor(width / grid);
+    const cellHeight = Math.floor(height / grid);
+
+    const startX = Math.floor((width - cellWidth) / 2);
+    const startY = Math.floor((height - cellHeight) / 2);
+
+    const output = new ImageData(cellWidth, cellHeight);
+    const out = output.data;
+
+    for (let y = 0; y < cellHeight; y++) {
+        for (let x = 0; x < cellWidth; x++) {
+            const srcIdx = ((y + startY) * width + (x + startX)) * 4;
+            const dstIdx = (y * cellWidth + x) * 4;
+
+            out[dstIdx] = data[srcIdx];
+            out[dstIdx + 1] = data[srcIdx + 1];
+            out[dstIdx + 2] = data[srcIdx + 2];
+            out[dstIdx + 3] = data[srcIdx + 3];
+        }
+    }
+
+    return output;
+}
