@@ -216,6 +216,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                             !!e.checked,
                                                     }));
                                                 }}
+                                                data-test-name="log-transform-tool-log-transform-subtool"
                                             >
                                                 <Checkbox.HiddenInput />
                                                 <Checkbox.Control
@@ -249,6 +250,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                         },
                                                     }));
                                                 }}
+                                                data-test-name="log-transform-tool-duplicate-image-subtool"
                                             >
                                                 <Checkbox.HiddenInput />
                                                 <Checkbox.Control
@@ -292,7 +294,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                         }
                                                     >
                                                         <NumberInput.Control />
-                                                        <NumberInput.Input />
+                                                        <NumberInput.Input data-test-name="log-transform-tool-duplicate-image-subtool-duplicates-input" />
                                                     </NumberInput.Root>
                                                 </Field.Root>
                                             </HStack>
@@ -321,6 +323,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                         },
                                                     }));
                                                 }}
+                                                data-test-name="log-transform-tool-scale-and-rotate-subtool"
                                             >
                                                 <Checkbox.HiddenInput />
                                                 <Checkbox.Control
@@ -370,7 +373,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                         }
                                                     >
                                                         <NumberInput.Control />
-                                                        <NumberInput.Input />
+                                                        <NumberInput.Input data-test-name="log-transform-tool-scale-and-rotate-subtool-re-input" />
                                                     </NumberInput.Root>
                                                 </Field.Root>
                                                 <Field.Root width="max-content">
@@ -408,7 +411,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                         }
                                                     >
                                                         <NumberInput.Control />
-                                                        <NumberInput.Input />
+                                                        <NumberInput.Input data-test-name="log-transform-tool-scale-and-rotate-subtool-im-input" />
                                                     </NumberInput.Root>
                                                 </Field.Root>
                                             </HStack>
@@ -438,6 +441,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                         },
                                                     }));
                                                 }}
+                                                data-test-name="log-transform-tool-deduplicate-image-subtool"
                                             >
                                                 <Checkbox.HiddenInput />
                                                 <Checkbox.Control
@@ -483,7 +487,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                         }
                                                     >
                                                         <NumberInput.Control />
-                                                        <NumberInput.Input />
+                                                        <NumberInput.Input data-test-name="log-transform-tool-deduplicate-image-subtool-duplicates-input" />
                                                     </NumberInput.Root>
                                                 </Field.Root>
                                             </HStack>
@@ -506,6 +510,7 @@ const LogTransformTool = ({ image, onSave }: Props) => {
                                                             !!e.checked,
                                                     }));
                                                 }}
+                                                data-test-name="log-transform-tool-exponential-transform-subtool"
                                             >
                                                 <Checkbox.HiddenInput />
                                                 <Checkbox.Control

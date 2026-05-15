@@ -12,6 +12,7 @@ declare global {
             clearDownloads(): Chainable;
             updateNumberInputWithLabel(label: string, value: number): Chainable;
             getValueOfNumericInputWithLabel(label: string): Chainable<number>;
+            setCheckbox(checked: boolean): Chainable<JQuery<HTMLElement>>;
         }
     }
 }
@@ -72,6 +73,19 @@ Cypress.Commands.add(
                     .type(`{selectAll}${value}`, { delay: 50 })
                     .blur();
             });
+    },
+);
+
+Cypress.Commands.add(
+    'setCheckbox',
+    { prevSubject: 'element' },
+    (subject, checked: boolean) => {
+        cy.wrap(subject).then(($checkbox) => {
+            const isChecked = $checkbox.attr('data-state') === 'checked';
+            if (checked !== isChecked) {
+                cy.wrap($checkbox).click();
+            }
+        });
     },
 );
 
