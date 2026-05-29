@@ -48,6 +48,7 @@ import { BiReflectHorizontal, BiReflectVertical } from 'react-icons/bi';
 import { GoTrash } from 'react-icons/go';
 import TresholdingTool from './components/TresholdingTool';
 import LogTransformTool from './components/LogTransformTool';
+import HSLTool from './components/HSLTool';
 
 const HEADER_HEIGHT = 86;
 
@@ -551,6 +552,10 @@ function App() {
                                     onSave={handleImageUpdate}
                                 />
                                 <LogTransformTool
+                                    image={image}
+                                    onSave={handleImageUpdate}
+                                />
+                                <HSLTool
                                     image={image}
                                     onSave={handleImageUpdate}
                                 />

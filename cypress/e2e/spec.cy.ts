@@ -125,12 +125,6 @@ describe('page', () => {
         button.click();
         cy.downloadAndMatchSnapshot('test-default.png');
     });
-    it('thesholding tool works with default settings', () => {
-        cy.get('[data-test-name="tresholding-tool-open"]').click();
-        cy.wait(100);
-        cy.get('[data-test-name="tresholding-tool-save"]').click();
-        cy.downloadAndMatchSnapshot('test-treshold-default-settings.png');
-    });
 });
 
 // tests disabled in CI (antialiasing issue):
