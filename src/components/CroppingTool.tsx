@@ -17,9 +17,12 @@ type Props = {
     onSave: (image: HTMLImageElement) => void;
 };
 
-function getSign(x1: number, y1: number, x2: number, y2: number) {
-    return (((y2 - y1) / Math.abs(y2 - y1)) * (x2 - x1)) / Math.abs(x2 - x1);
-}
+// function getSign(x1: number, y1: number, x2: number, y2: number) {
+//     return (((y2 - y1) / Math.abs(y2 - y1)) * (x2 - x1)) / Math.abs(x2 - x1);
+// }
+
+// todo - rename
+const height = 600;
 
 const CroppingTool = ({ image, onSave }: Props) => {
     const bodyRef = useRef<HTMLDivElement>(null);
@@ -29,11 +32,28 @@ const CroppingTool = ({ image, onSave }: Props) => {
     const [startPoint, setStartPoint] = useState<{
         x: number;
         y: number;
-    } | null>(null);
+    }>({
+        x: image.width * 0.1,
+        y: image.height * 0.1,
+    });
     const [endPoint, setEndPoint] = useState<{
         x: number;
         y: number;
-    } | null>(null);
+    }>({
+        x: image.width * 0.9,
+        y: image.height * 0.9,
+    });
+    const area = useRef<{
+        x1: number;
+        y1: number;
+        x2: number;
+        y2: number;
+    }>({
+        x1: image.width * 0.1,
+        y1: image.height * 0.1,
+        x2: image.width * 0.9,
+        y2: image.height * 0.9,
+    });
     const [aspectRatio, setAspectRatio] = useState<{
         force: boolean;
         widthComponent: number;
@@ -45,15 +65,21 @@ const CroppingTool = ({ image, onSave }: Props) => {
     });
 
     const handleResetPoints = useCallback(() => {
-        setStartPoint(null);
-        setEndPoint(null);
+        setStartPoint({
+            x: image.width * 0.1,
+            y: image.height * 0.1,
+        });
+        setEndPoint({
+            x: image.width * 0.9,
+            y: image.height * 0.9,
+        });
         setOpen(false);
         setAspectRatio({
             force: true,
             heightComponent: 1,
             widthComponent: 1,
         });
-    }, []);
+    }, [image]);
 
     const handleSave = useCallback(() => {
         if (!startPoint || !endPoint) return image; // no need to crop
@@ -65,7 +91,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
             startPoint.x,
             startPoint.y,
             endPoint.x - startPoint.x,
-            endPoint.y - startPoint.y,
+            endPoint.y - startPoint.y
         );
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = imageData.width;
@@ -81,6 +107,32 @@ const CroppingTool = ({ image, onSave }: Props) => {
         img.src = tempCanvas.toDataURL();
     }, [onSave, image, startPoint, endPoint, handleResetPoints]);
 
+    // const renderCropArea = useCallback((x1: number, x2: number, y1: number, y2: number) => {
+    //     const canvasOverlay = canvasOverlayRef.current;
+    //     if (!canvasOverlay) return;
+    //     const overlayCtx = canvasOverlay.getContext('2d');
+    //     if (!overlayCtx) return;
+
+    // }, [])
+
+    const renderBackdrop = useCallback(() => {
+        const canvasOverlay = canvasOverlayRef.current;
+        if (!canvasOverlay) return;
+        const overlayCtx = canvasOverlay.getContext('2d');
+        if (!overlayCtx) return;
+
+        const w = canvasOverlay.width;
+        const h = canvasOverlay.height;
+        const { x1, x2, y1, y2 } = area.current;
+
+        overlayCtx.clearRect(0, 0, w, h);
+        overlayCtx.fillStyle = '#0000006e';
+        overlayCtx.fillRect(0, 0, w, y1);
+        overlayCtx.fillRect(0, y2, w, h);
+        overlayCtx.fillRect(0, y1, x1, y2 - y1);
+        overlayCtx.fillRect(x2, y1, w, y2 - y1);
+    }, []);
+
     useEffect(() => {
         const listeners: {
             element: HTMLCanvasElement;
@@ -93,7 +145,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
             if (canvas && body && canvasOverlay) {
                 canvas.width = image.naturalWidth;
                 canvas.height = image.naturalHeight;
-                const height = 600;
                 canvas.style.height = `${height}px`;
                 canvas.style.width = `${
                     (image.naturalWidth / image.naturalHeight) * height
@@ -108,6 +159,8 @@ const CroppingTool = ({ image, onSave }: Props) => {
                 canvasOverlay.style.left = `${canvas.offsetLeft}px`;
                 canvasOverlay.style.outline = '1px solid #444444';
 
+                renderBackdrop();
+
                 const ctx = canvas.getContext('2d');
                 if (ctx) {
                     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
@@ -115,114 +168,214 @@ const CroppingTool = ({ image, onSave }: Props) => {
 
                 const overlayCtx = canvasOverlay.getContext('2d');
                 if (overlayCtx) {
-                    overlayCtx.clearRect(
-                        0,
-                        0,
-                        canvasOverlay.width,
-                        canvasOverlay.height,
-                    );
-                    if (startPoint && endPoint) {
-                        overlayCtx.fillStyle = '#0000006e';
-                        overlayCtx.fillRect(
-                            startPoint.x,
-                            startPoint.y,
-                            endPoint.x - startPoint.x,
-                            endPoint.y - startPoint.y,
-                        );
-                    }
+                    let movedCorner:
+                        | 'top-left'
+                        | 'top-right'
+                        | 'bottom-left'
+                        | 'bottom-right'
+                        | 'inside-area'
+                        | null = null;
                     const onMouseDown = (e: MouseEvent) => {
                         const x = Math.floor(
                             (e.offsetX * canvasOverlay.width) /
-                                +canvasOverlay.style.width.split('px')[0],
+                                +canvasOverlay.style.width.split('px')[0]
                         );
                         const y = Math.floor(
                             (e.offsetY * canvasOverlay.height) /
-                                +canvasOverlay.style.height.split('px')[0],
+                                +canvasOverlay.style.height.split('px')[0]
                         );
-                        if (!startPoint && !endPoint) {
-                            setStartPoint({ x, y });
-                        }
-                        if (startPoint && !endPoint) {
-                            if (aspectRatio.force) {
-                                const newY: number =
-                                    (aspectRatio.heightComponent /
-                                        aspectRatio.widthComponent) *
-                                        getSign(
-                                            startPoint.x,
-                                            startPoint.y,
-                                            x,
-                                            y,
-                                        ) *
-                                        (x - startPoint.x) +
-                                    startPoint.y;
-                                setEndPoint({
-                                    x,
-                                    y:
-                                        y <= canvasOverlay.height
-                                            ? newY
-                                            : canvasOverlay.height,
-                                });
+                        // if (!startPoint && !endPoint) {
+                        //     setStartPoint({ x, y });
+                        // }
+                        // if (startPoint && !endPoint) {
+                        //     if (aspectRatio.force) {
+                        //         const newY: number =
+                        //             (aspectRatio.heightComponent /
+                        //                 aspectRatio.widthComponent) *
+                        //                 getSign(
+                        //                     startPoint.x,
+                        //                     startPoint.y,
+                        //                     x,
+                        //                     y,
+                        //                 ) *
+                        //                 (x - startPoint.x) +
+                        //             startPoint.y;
+                        //         setEndPoint({
+                        //             x,
+                        //             y:
+                        //                 y <= canvasOverlay.height
+                        //                     ? newY
+                        //                     : canvasOverlay.height,
+                        //         });
+                        //     } else {
+                        //         setEndPoint({ x, y });
+                        //     }
+                        // }
+
+                        const { x1, x2, y1, y2 } = area.current;
+                        if (x >= x1 && x <= x2 && y >= y1 && y <= y2) {
+                            movedCorner = 'inside-area';
+                        } else if (y < canvasOverlay.height / 2) {
+                            if (x < canvasOverlay.width / 2) {
+                                movedCorner = 'top-left';
                             } else {
-                                setEndPoint({ x, y });
+                                movedCorner = 'top-right';
+                            }
+                        } else {
+                            if (x < canvasOverlay.width / 2) {
+                                movedCorner = 'bottom-left';
+                            } else {
+                                movedCorner = 'bottom-right';
                             }
                         }
                     };
                     const onMouseMove = (e: MouseEvent) => {
-                        const x =
-                            (e.offsetX * canvasOverlay.width) /
-                            +canvasOverlay.style.width.split('px')[0];
-                        const y =
-                            (e.offsetY * canvasOverlay.height) /
-                            +canvasOverlay.style.height.split('px')[0];
-                        overlayCtx.clearRect(
-                            0,
-                            0,
-                            canvasOverlay.width,
-                            canvasOverlay.height,
-                        );
-                        if (startPoint) {
-                            overlayCtx.fillStyle = '#0000006e';
-                            overlayCtx.fillRect(
-                                startPoint.x,
-                                startPoint.y,
-                                (endPoint?.x ?? x) - startPoint.x,
-                                (endPoint?.y ??
-                                    (aspectRatio.force
-                                        ? (aspectRatio.heightComponent /
-                                              aspectRatio.widthComponent) *
-                                              getSign(
-                                                  startPoint.x,
-                                                  startPoint.y,
-                                                  x,
-                                                  y,
-                                              ) *
-                                              (x - startPoint.x) +
-                                          startPoint.y
-                                        : y)) - startPoint.y,
-                            );
+                        // const x =
+                        //     (e.offsetX * canvasOverlay.width) /
+                        //     +canvasOverlay.style.width.split('px')[0];
+                        // const y =
+                        //     (e.offsetY * canvasOverlay.height) /
+                        //     +canvasOverlay.style.height.split('px')[0];
+                        // overlayCtx.clearRect(
+                        //     0,
+                        //     0,
+                        //     canvasOverlay.width,
+                        //     canvasOverlay.height,
+                        // );
+                        // if (startPoint) {
+                        //     overlayCtx.fillStyle = '#0000006e';
+                        //     overlayCtx.fillRect(
+                        //         startPoint.x,
+                        //         startPoint.y,
+                        //         (endPoint?.x ?? x) - startPoint.x,
+                        //         (endPoint?.y ??
+                        //             (aspectRatio.force
+                        //                 ? (aspectRatio.heightComponent /
+                        //                       aspectRatio.widthComponent) *
+                        //                       getSign(
+                        //                           startPoint.x,
+                        //                           startPoint.y,
+                        //                           x,
+                        //                           y,
+                        //                       ) *
+                        //                       (x - startPoint.x) +
+                        //                   startPoint.y
+                        //                 : y)) - startPoint.y,
+                        //     );
+                        // }
+                        // overlayCtx.strokeStyle = 'yellow';
+                        // const lineWidth = 3;
+                        // overlayCtx.lineWidth = lineWidth;
+                        // overlayCtx.beginPath();
+                        // overlayCtx.moveTo(0, y - lineWidth / 2);
+                        // overlayCtx.lineTo(
+                        //     canvasOverlay.width,
+                        //     y - lineWidth / 2,
+                        // );
+                        // overlayCtx.stroke();
+                        // overlayCtx.closePath();
+                        // overlayCtx.beginPath();
+                        // overlayCtx.moveTo(x - lineWidth / 2, 0);
+                        // overlayCtx.lineTo(
+                        //     x - lineWidth / 2,
+                        //     canvasOverlay.height,
+                        // );
+                        // overlayCtx.stroke();
+                        // overlayCtx.closePath();
+
+                        const dx = e.movementX * 2;
+                        const dy = e.movementY * 2;
+                        if (movedCorner === 'inside-area') {
+                            const old = {
+                                ...area.current,
+                            };
+
+                            let x1 = old.x1 + dx;
+                            let x2 = old.x2 + dx;
+                            let y1 = old.y1 + dy;
+                            let y2 = old.y2 + dy;
+
+                            if (x1 < 0) x1 = 0;
+                            if (x1 > canvasOverlay.width)
+                                x1 = canvasOverlay.width;
+                            if (x2 < 0) x2 = 0;
+                            if (x2 > canvasOverlay.width)
+                                x2 = canvasOverlay.width;
+                            if (y1 < 0) y1 = 0;
+                            if (y1 > canvasOverlay.height)
+                                y1 = canvasOverlay.height;
+                            if (y2 < 0) y2 = 0;
+                            if (y2 > canvasOverlay.height)
+                                y2 = canvasOverlay.height;
+
+                            if (x1 + 60 > old.x2) x1 = old.x1;
+                            if (y1 + 60 > old.y2) y1 = old.y1;
+
+                            area.current = {
+                                x1,
+                                x2,
+                                y1,
+                                y2,
+                            };
+                            renderBackdrop();
+                            // todo - move rendering of grid from css to canvas:
+                            setStartPoint({
+                                x: old.x1 + dx,
+                                y: old.y1 + dy,
+                            });
+                            setEndPoint({
+                                x: old.x2 + dx,
+                                y: old.y2 + dy,
+                            });
                         }
-                        overlayCtx.strokeStyle = 'yellow';
-                        const lineWidth = 3;
-                        overlayCtx.lineWidth = lineWidth;
-                        overlayCtx.beginPath();
-                        overlayCtx.moveTo(0, y - lineWidth / 2);
-                        overlayCtx.lineTo(
-                            canvasOverlay.width,
-                            y - lineWidth / 2,
-                        );
-                        overlayCtx.stroke();
-                        overlayCtx.closePath();
-                        overlayCtx.beginPath();
-                        overlayCtx.moveTo(x - lineWidth / 2, 0);
-                        overlayCtx.lineTo(
-                            x - lineWidth / 2,
-                            canvasOverlay.height,
-                        );
-                        overlayCtx.stroke();
-                        overlayCtx.closePath();
+                        if (movedCorner === 'top-left') {
+                            const old = {
+                                ...area.current,
+                            };
+
+                            let x1 = old.x1 + dx;
+                            let y1 = old.y1 + dy;
+
+                            if (x1 < 0) x1 = 0;
+                            if (x1 > canvasOverlay.width)
+                                x1 = canvasOverlay.width;
+                            if (y1 < 0) y1 = 0;
+                            if (y1 > canvasOverlay.height)
+                                y1 = canvasOverlay.height;
+
+                            if (x1 + 60 > old.x2) x1 = old.x1;
+                            if (y1 + 60 > old.y2) y1 = old.y1;
+
+                            // todo - add support for forced aspect ratio
+
+                            // todo - add option to move the area if the cursor is inside of the box
+
+                            area.current = {
+                                ...old,
+                                x1,
+                                y1,
+                            };
+
+                            renderBackdrop();
+                            // todo - move rendering of grid from css to canvas:
+                            setStartPoint({
+                                x: x1,
+                                y: y1,
+                            });
+                        } else if (movedCorner === 'bottom-right') {
+                            // todo - implement rest of the corners
+                        }
+                    };
+                    const onMouseUp = () => {
+                        movedCorner = null;
+                    };
+                    const onMouseLeave = () => {
+                        movedCorner = null;
                     };
                     canvasOverlay.addEventListener('mousedown', onMouseDown);
                     canvasOverlay.addEventListener('mousemove', onMouseMove);
+                    canvasOverlay.addEventListener('mouseup', onMouseUp);
+                    canvasOverlay.addEventListener('mouseleave', onMouseLeave);
                     listeners.push({
                         element: canvasOverlay,
                         parameters: ['mousemove', onMouseMove as EventListener],
@@ -230,6 +383,13 @@ const CroppingTool = ({ image, onSave }: Props) => {
                     listeners.push({
                         element: canvasOverlay,
                         parameters: ['mousedown', onMouseDown as EventListener],
+                    });
+                    listeners.push({
+                        element: canvasOverlay,
+                        parameters: [
+                            'mouseleave',
+                            onMouseLeave as EventListener,
+                        ],
                     });
                 }
             }
@@ -243,12 +403,12 @@ const CroppingTool = ({ image, onSave }: Props) => {
     }, [
         image,
         open,
-        endPoint,
-        startPoint,
         aspectRatio.force,
         aspectRatio.widthComponent,
         aspectRatio.heightComponent,
     ]);
+    const perceivedImageWidth =
+        (image.naturalWidth / image.naturalHeight) * height;
     return (
         <Dialog.Root
             size="full"
@@ -258,10 +418,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
             onExitComplete={handleResetPoints}
         >
             <Dialog.Trigger asChild>
-                <Button
-                    size="sm"
-                    variant="surface"
-                >
+                <Button size="sm" variant="surface">
                     <FaCropSimple />
                     Crop
                 </Button>
@@ -274,12 +431,195 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             <Dialog.Title>Crop the image </Dialog.Title>
                         </Dialog.Header>
                         <Dialog.Body ref={bodyRef}>
-                            <canvas ref={canvasRef} />
-                            <canvas ref={canvasOverlayRef} />
-                            <HStack
-                                marginTop={2}
-                                alignItems="end"
+                            <div
+                                style={{
+                                    position: 'relative',
+                                }}
                             >
+                                <canvas ref={canvasRef} />
+                                {startPoint != null && endPoint != null && (
+                                    <>
+                                        {/* boundaries */}
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
+                                                top: `${(startPoint.y / image.height) * height}px`,
+                                                width: `${((endPoint.x - startPoint.x) / image.width) * perceivedImageWidth}px`,
+                                                height: '1px',
+                                                backgroundColor:
+                                                    'rgb(190,190,190)',
+                                            }}
+                                        ></div>
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
+                                                top: `${(endPoint.y / image.height) * height}px`,
+                                                width: `${((endPoint.x - startPoint.x) / image.width) * perceivedImageWidth}px`,
+                                                height: '1px',
+                                                backgroundColor:
+                                                    'rgb(190,190,190)',
+                                            }}
+                                        ></div>
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
+                                                top: `${(startPoint.y / image.height) * height}px`,
+                                                width: '1px',
+                                                height: `${((endPoint.y - startPoint.y) / image.height) * height}px`,
+                                                backgroundColor:
+                                                    'rgb(190,190,190)',
+                                            }}
+                                        ></div>
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${(endPoint.x / image.width) * perceivedImageWidth}px`,
+                                                top: `${(startPoint.y / image.height) * height}px`,
+                                                width: '1px',
+                                                height: `${((endPoint.y - startPoint.y) / image.height) * height}px`,
+                                                backgroundColor:
+                                                    'rgb(190,190,190)',
+                                            }}
+                                        ></div>
+
+                                        {/* grids */}
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${((startPoint.x + ((endPoint.x - startPoint.x) * 1) / 3) / image.width) * perceivedImageWidth}px`,
+                                                top: `${(startPoint.y / image.height) * height}px`,
+                                                width: '1px',
+                                                height: `${((endPoint.y - startPoint.y) / image.height) * height}px`,
+                                                backgroundColor:
+                                                    'rgb(190,190,190)',
+                                            }}
+                                        ></div>
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${((startPoint.x + ((endPoint.x - startPoint.x) * 2) / 3) / image.width) * perceivedImageWidth}px`,
+                                                top: `${(startPoint.y / image.height) * height}px`,
+                                                width: '1px',
+                                                height: `${((endPoint.y - startPoint.y) / image.height) * height}px`,
+                                                backgroundColor:
+                                                    'rgb(190,190,190)',
+                                            }}
+                                        ></div>
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
+                                                top: `${((startPoint.y + ((endPoint.y - startPoint.y) * 1) / 3) / image.height) * height}px`,
+                                                width: `${((endPoint.x - startPoint.x) / image.width) * perceivedImageWidth}px`,
+                                                height: '1px',
+                                                backgroundColor:
+                                                    'rgb(190,190,190)',
+                                            }}
+                                        ></div>
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
+                                                top: `${((startPoint.y + ((endPoint.y - startPoint.y) * 2) / 3) / image.height) * height}px`,
+                                                width: `${((endPoint.x - startPoint.x) / image.width) * perceivedImageWidth}px`,
+                                                height: '1px',
+                                                backgroundColor:
+                                                    'rgb(190,190,190)',
+                                            }}
+                                        ></div>
+
+                                        {/* handles */}
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
+                                                top: `${(startPoint.y / image.height) * height}px`,
+                                                width: '30px',
+                                                height: '4px',
+                                                backgroundColor: 'white',
+                                            }}
+                                        ></div>
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
+                                                top: `${(startPoint.y / image.height) * height}px`,
+                                                width: '4px',
+                                                height: '30px',
+                                                backgroundColor: 'white',
+                                            }}
+                                        ></div>
+
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 30}px`,
+                                                top: `${(startPoint.y / image.height) * height}px`,
+                                                width: '30px',
+                                                height: '4px',
+                                                backgroundColor: 'white',
+                                            }}
+                                        ></div>
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 4}px`,
+                                                top: `${(startPoint.y / image.height) * height}px`,
+                                                width: '4px',
+                                                height: '30px',
+                                                backgroundColor: 'white',
+                                            }}
+                                        ></div>
+
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 30}px`,
+                                                top: `${(endPoint.y / image.height) * height - 4}px`,
+                                                width: '30px',
+                                                height: '4px',
+                                                backgroundColor: 'white',
+                                            }}
+                                        ></div>
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 4}px`,
+                                                top: `${(endPoint.y / image.height) * height - 30}px`,
+                                                width: '4px',
+                                                height: '30px',
+                                                backgroundColor: 'white',
+                                            }}
+                                        ></div>
+
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
+                                                top: `${(endPoint.y / image.height) * height - 4}px`,
+                                                width: '30px',
+                                                height: '4px',
+                                                backgroundColor: 'white',
+                                            }}
+                                        ></div>
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
+                                                top: `${(endPoint.y / image.height) * height - 30}px`,
+                                                width: '4px',
+                                                height: '30px',
+                                                backgroundColor: 'white',
+                                            }}
+                                        ></div>
+                                    </>
+                                )}
+                                <canvas ref={canvasOverlayRef} />
+                            </div>
+                            <HStack marginTop={2} alignItems="end">
                                 <Field.Root width="max-content">
                                     <Field.Label>X</Field.Label>
                                     <NumberInput.Root
@@ -300,7 +640,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                                     (old) => ({
                                                         ...old,
                                                         widthComponent: 1,
-                                                    }),
+                                                    })
                                                 );
                                             return setAspectRatio((old) => ({
                                                 ...old,
@@ -335,7 +675,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                                     (old) => ({
                                                         ...old,
                                                         heightComponent: 1,
-                                                    }),
+                                                    })
                                                 );
                                             return setAspectRatio((old) => ({
                                                 ...old,
@@ -374,8 +714,14 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                 size="xs"
                                 disabled={!startPoint && !endPoint}
                                 onClick={() => {
-                                    setStartPoint(null);
-                                    setEndPoint(null);
+                                    setStartPoint({
+                                        x: image.width * 0.1,
+                                        y: image.height * 0.1,
+                                    });
+                                    setEndPoint({
+                                        x: image.width * 0.9,
+                                        y: image.height * 0.9,
+                                    });
                                 }}
                             >
                                 Reset points
@@ -385,10 +731,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             <Dialog.ActionTrigger asChild>
                                 <Button variant="outline">Cancel</Button>
                             </Dialog.ActionTrigger>
-                            <Button
-                                colorPalette="blue"
-                                onClick={handleSave}
-                            >
+                            <Button colorPalette="blue" onClick={handleSave}>
                                 Save
                             </Button>
                         </Dialog.Footer>
