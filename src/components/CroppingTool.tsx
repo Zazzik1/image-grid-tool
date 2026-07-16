@@ -43,6 +43,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
         x: image.width * 0.9,
         y: image.height * 0.9,
     });
+    const [cursor, setCursor] = useState('default');
     const area = useRef<{
         x1: number;
         y1: number;
@@ -73,6 +74,13 @@ const CroppingTool = ({ image, onSave }: Props) => {
             x: image.width * 0.9,
             y: image.height * 0.9,
         });
+        area.current = {
+            x1: image.width * 0.1,
+            y1: image.height * 0.1,
+            x2: image.width * 0.9,
+            y2: image.height * 0.9,
+        };
+        renderBackdrop();
         setOpen(false);
         setAspectRatio({
             force: true,
@@ -215,19 +223,43 @@ const CroppingTool = ({ image, onSave }: Props) => {
                         const { x1, x2, y1, y2 } = area.current;
                         if (x >= x1 && x <= x2 && y >= y1 && y <= y2) {
                             movedCorner = 'inside-area';
-                        } else if (y < canvasOverlay.height / 2) {
-                            if (x < canvasOverlay.width / 2) {
-                                movedCorner = 'top-left';
-                            } else {
-                                movedCorner = 'top-right';
-                            }
                         } else {
-                            if (x < canvasOverlay.width / 2) {
+                            const distances = {
+                                topLeft: Math.sqrt(
+                                    Math.pow(x1 - x, 2) + Math.pow(y1 - y, 2)
+                                ),
+                                topRight: Math.sqrt(
+                                    Math.pow(x2 - x, 2) + Math.pow(y1 - y, 2)
+                                ),
+                                bottomLeft: Math.sqrt(
+                                    Math.pow(x1 - x, 2) + Math.pow(y2 - y, 2)
+                                ),
+                                bottomRight: Math.sqrt(
+                                    Math.pow(x2 - x, 2) + Math.pow(y2 - y, 2)
+                                ),
+                            };
+                            const smallestDistance = Math.min(
+                                ...Object.values(distances)
+                            );
+                            console.log(distances.topLeft === smallestDistance);
+                            console.log(smallestDistance === distances.topLeft);
+                            if (smallestDistance === distances.topLeft) {
+                                movedCorner = 'top-left';
+                            } else if (
+                                smallestDistance === distances.topRight
+                            ) {
+                                movedCorner = 'top-right';
+                            } else if (
+                                smallestDistance === distances.bottomLeft
+                            ) {
                                 movedCorner = 'bottom-left';
-                            } else {
+                            } else if (
+                                smallestDistance === distances.bottomRight
+                            ) {
                                 movedCorner = 'bottom-right';
                             }
                         }
+                        console.log(movedCorner);
                     };
                     const onMouseMove = (e: MouseEvent) => {
                         // const x =
@@ -285,11 +317,10 @@ const CroppingTool = ({ image, onSave }: Props) => {
 
                         const dx = e.movementX * 2;
                         const dy = e.movementY * 2;
+                        const old = {
+                            ...area.current,
+                        };
                         if (movedCorner === 'inside-area') {
-                            const old = {
-                                ...area.current,
-                            };
-
                             let x1 = old.x1 + dx;
                             let x2 = old.x2 + dx;
                             let y1 = old.y1 + dy;
@@ -332,28 +363,18 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                 x: x2,
                                 y: y2,
                             });
-                        }
-                        if (movedCorner === 'top-left') {
-                            const old = {
-                                ...area.current,
-                            };
-
+                            setCursor('move');
+                        } else if (movedCorner === 'top-left') {
                             let x1 = old.x1 + dx;
                             let y1 = old.y1 + dy;
 
                             if (x1 < 0) x1 = 0;
-                            if (x1 > canvasOverlay.width)
-                                x1 = canvasOverlay.width;
                             if (y1 < 0) y1 = 0;
-                            if (y1 > canvasOverlay.height)
-                                y1 = canvasOverlay.height;
 
                             if (x1 + 60 > old.x2) x1 = old.x1;
                             if (y1 + 60 > old.y2) y1 = old.y1;
 
                             // todo - add support for forced aspect ratio
-
-                            // todo - add option to move the area if the cursor is inside of the box
 
                             area.current = {
                                 ...old,
@@ -367,8 +388,96 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                 x: x1,
                                 y: y1,
                             });
+                            setCursor('nw-resize');
+                        } else if (movedCorner === 'top-right') {
+                            let x2 = old.x2 + dx;
+                            let y1 = old.y1 + dy;
+
+                            if (x2 > canvasOverlay.width)
+                                x2 = canvasOverlay.width;
+                            if (y1 < 0) y1 = 0;
+
+                            if (x2 - 60 < old.x1) x2 = old.x2;
+                            if (y1 + 60 > old.y2) y1 = old.y1;
+
+                            // todo - add support for forced aspect ratio
+
+                            area.current = {
+                                ...old,
+                                x2,
+                                y1,
+                            };
+
+                            renderBackdrop();
+                            // todo - move rendering of grid from css to canvas:
+                            setEndPoint({
+                                x: x2,
+                                y: old.y2,
+                            });
+                            setStartPoint({
+                                x: old.x1,
+                                y: y1,
+                            });
+                            setCursor('ne-resize');
+                        } else if (movedCorner === 'bottom-left') {
+                            let x1 = old.x1 + dx;
+                            let y2 = old.y2 + dy;
+
+                            if (x1 < 0) x1 = 0;
+                            if (y2 > canvasOverlay.height)
+                                y2 = canvasOverlay.height;
+
+                            console.log(x1, old.x1);
+                            if (x1 + 60 > old.x2) x1 = old.x1;
+                            if (y2 - 60 < old.y1) y2 = old.y2;
+
+                            // todo - add support for forced aspect ratio
+
+                            area.current = {
+                                ...old,
+                                x1,
+                                y2,
+                            };
+
+                            renderBackdrop();
+                            // todo - move rendering of grid from css to canvas:
+                            setEndPoint({
+                                x: old.x2,
+                                y: y2,
+                            });
+                            setStartPoint({
+                                x: x1,
+                                y: old.y1,
+                            });
+                            setCursor('sw-resize');
                         } else if (movedCorner === 'bottom-right') {
-                            // todo - implement rest of the corners
+                            let x2 = old.x2 + dx;
+                            let y2 = old.y2 + dy;
+
+                            if (x2 > canvasOverlay.width)
+                                x2 = canvasOverlay.width;
+                            if (y2 > canvasOverlay.height)
+                                y2 = canvasOverlay.height;
+
+                            if (x2 - 60 < old.x1) x2 = old.x2;
+                            if (y2 - 60 < old.y1) y2 = old.y2;
+
+                            // todo - add support for forced aspect ratio
+
+                            area.current = {
+                                ...old,
+                                x2,
+                                y2,
+                            };
+
+                            renderBackdrop();
+                            // todo - move rendering of grid from css to canvas:
+                            setEndPoint({
+                                x: x2,
+                                y: y2,
+                            });
+
+                            setCursor('se-resize');
                         }
                     };
                     const onMouseUp = () => {
@@ -376,6 +485,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
                     };
                     const onMouseLeave = () => {
                         movedCorner = null;
+                        setCursor('default');
                     };
                     canvasOverlay.addEventListener('mousedown', onMouseDown);
                     canvasOverlay.addEventListener('mousemove', onMouseMove);
@@ -622,7 +732,10 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                         ></div>
                                     </>
                                 )}
-                                <canvas ref={canvasOverlayRef} />
+                                <canvas
+                                    ref={canvasOverlayRef}
+                                    style={{ cursor }}
+                                />
                             </div>
                             <HStack marginTop={2} alignItems="end">
                                 <Field.Root width="max-content">
@@ -727,6 +840,14 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                         x: image.width * 0.9,
                                         y: image.height * 0.9,
                                     });
+                                    area.current = {
+                                        x1: image.width * 0.1,
+                                        y1: image.height * 0.1,
+                                        x2: image.width * 0.9,
+                                        y2: image.height * 0.9,
+                                    };
+                                    renderBackdrop();
+                                    // todo - shouldn't it be replaced with handleResetPoints?
                                 }}
                             >
                                 Reset points
