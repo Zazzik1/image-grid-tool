@@ -295,18 +295,22 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             let y1 = old.y1 + dy;
                             let y2 = old.y2 + dy;
 
-                            if (x1 < 0) x1 = 0;
-                            if (x1 > canvasOverlay.width)
-                                x1 = canvasOverlay.width;
-                            if (x2 < 0) x2 = 0;
-                            if (x2 > canvasOverlay.width)
+                            if (x1 < 0) {
+                                x1 = 0;
+                                x2 = old.x2 - old.x1;
+                            }
+                            if (x2 > canvasOverlay.width) {
                                 x2 = canvasOverlay.width;
-                            if (y1 < 0) y1 = 0;
-                            if (y1 > canvasOverlay.height)
-                                y1 = canvasOverlay.height;
-                            if (y2 < 0) y2 = 0;
-                            if (y2 > canvasOverlay.height)
+                                x1 = canvasOverlay.width - (old.x2 - old.x1);
+                            }
+                            if (y1 < 0) {
+                                y1 = 0;
+                                y2 = old.y2 - old.y1;
+                            }
+                            if (y2 > canvasOverlay.height) {
                                 y2 = canvasOverlay.height;
+                                y1 = canvasOverlay.height - (old.y2 - old.y1);
+                            }
 
                             if (x1 + 60 > old.x2) x1 = old.x1;
                             if (y1 + 60 > old.y2) y1 = old.y1;
@@ -317,15 +321,16 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                 y1,
                                 y2,
                             };
+
                             renderBackdrop();
                             // todo - move rendering of grid from css to canvas:
                             setStartPoint({
-                                x: old.x1 + dx,
-                                y: old.y1 + dy,
+                                x: x1,
+                                y: y1,
                             });
                             setEndPoint({
-                                x: old.x2 + dx,
-                                y: old.y2 + dy,
+                                x: x2,
+                                y: y2,
                             });
                         }
                         if (movedCorner === 'top-left') {
