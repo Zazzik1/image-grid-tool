@@ -115,14 +115,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
         img.src = tempCanvas.toDataURL();
     }, [onSave, image, startPoint, endPoint, handleResetPoints]);
 
-    // const renderCropArea = useCallback((x1: number, x2: number, y1: number, y2: number) => {
-    //     const canvasOverlay = canvasOverlayRef.current;
-    //     if (!canvasOverlay) return;
-    //     const overlayCtx = canvasOverlay.getContext('2d');
-    //     if (!overlayCtx) return;
-
-    // }, [])
-
     const renderBackdrop = useCallback(() => {
         const canvasOverlay = canvasOverlayRef.current;
         if (!canvasOverlay) return;
@@ -259,61 +251,19 @@ const CroppingTool = ({ image, onSave }: Props) => {
                         }
                     };
                     const onMouseMove = (e: MouseEvent) => {
-                        // const x =
-                        //     (e.offsetX * canvasOverlay.width) /
-                        //     +canvasOverlay.style.width.split('px')[0];
-                        // const y =
-                        //     (e.offsetY * canvasOverlay.height) /
-                        //     +canvasOverlay.style.height.split('px')[0];
-                        // overlayCtx.clearRect(
-                        //     0,
-                        //     0,
-                        //     canvasOverlay.width,
-                        //     canvasOverlay.height,
-                        // );
-                        // if (startPoint) {
-                        //     overlayCtx.fillStyle = '#0000006e';
-                        //     overlayCtx.fillRect(
-                        //         startPoint.x,
-                        //         startPoint.y,
-                        //         (endPoint?.x ?? x) - startPoint.x,
-                        //         (endPoint?.y ??
-                        //             (aspectRatio.force
-                        //                 ? (aspectRatio.heightComponent /
-                        //                       aspectRatio.widthComponent) *
-                        //                       getSign(
-                        //                           startPoint.x,
-                        //                           startPoint.y,
-                        //                           x,
-                        //                           y,
-                        //                       ) *
-                        //                       (x - startPoint.x) +
-                        //                   startPoint.y
-                        //                 : y)) - startPoint.y,
-                        //     );
-                        // }
-                        // overlayCtx.strokeStyle = 'yellow';
-                        // const lineWidth = 3;
-                        // overlayCtx.lineWidth = lineWidth;
-                        // overlayCtx.beginPath();
-                        // overlayCtx.moveTo(0, y - lineWidth / 2);
-                        // overlayCtx.lineTo(
-                        //     canvasOverlay.width,
-                        //     y - lineWidth / 2,
-                        // );
-                        // overlayCtx.stroke();
-                        // overlayCtx.closePath();
-                        // overlayCtx.beginPath();
-                        // overlayCtx.moveTo(x - lineWidth / 2, 0);
-                        // overlayCtx.lineTo(
-                        //     x - lineWidth / 2,
-                        //     canvasOverlay.height,
-                        // );
-                        // overlayCtx.stroke();
-                        // overlayCtx.closePath();
-
-                        const dx = e.movementX * 2;
-                        const dy = e.movementY * 2;
+                        const dx =
+                            ((e.movementX * image.width) /
+                                canvasOverlay.width) *
+                            2;
+                        const dy =
+                            ((e.movementY * image.height) /
+                                canvasOverlay.height) *
+                            2;
+                        // todo - support for forced aspect ratio
+                        // const dy = aspectRatio.force
+                        //     ? (e.movementX * aspectRatio.heightComponent) /
+                        //       aspectRatio.widthComponent
+                        //     : e.movementY * 2;
                         const old = {
                             ...area.current,
                         };
@@ -371,8 +321,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             if (x1 + 60 > old.x2) x1 = old.x1;
                             if (y1 + 60 > old.y2) y1 = old.y1;
 
-                            // todo - add support for forced aspect ratio
-
                             area.current = {
                                 ...old,
                                 x1,
@@ -396,8 +344,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
 
                             if (x2 - 60 < old.x1) x2 = old.x2;
                             if (y1 + 60 > old.y2) y1 = old.y1;
-
-                            // todo - add support for forced aspect ratio
 
                             area.current = {
                                 ...old,
@@ -426,8 +372,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
 
                             if (x1 + 60 > old.x2) x1 = old.x1;
                             if (y2 - 60 < old.y1) y2 = old.y2;
-
-                            // todo - add support for forced aspect ratio
 
                             area.current = {
                                 ...old,
@@ -458,8 +402,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             if (x2 - 60 < old.x1) x2 = old.x2;
                             if (y2 - 60 < old.y1) y2 = old.y2;
 
-                            // todo - add support for forced aspect ratio
-
                             area.current = {
                                 ...old,
                                 x2,
@@ -478,6 +420,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
                     };
                     const onMouseUp = () => {
                         movedCorner = null;
+                        setCursor('default');
                     };
                     const onMouseLeave = () => {
                         movedCorner = null;
@@ -566,7 +509,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                             style={{
                                                 position: 'absolute',
                                                 left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
-                                                top: `${(endPoint.y / image.height) * height}px`,
+                                                top: `${(endPoint.y / image.height) * height - 1}px`,
                                                 width: `${((endPoint.x - startPoint.x) / image.width) * perceivedImageWidth}px`,
                                                 height: '1px',
                                                 backgroundColor:
@@ -587,7 +530,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                         <div
                                             style={{
                                                 position: 'absolute',
-                                                left: `${(endPoint.x / image.width) * perceivedImageWidth}px`,
+                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 1}px`,
                                                 top: `${(startPoint.y / image.height) * height}px`,
                                                 width: '1px',
                                                 height: `${((endPoint.y - startPoint.y) / image.height) * height}px`,
@@ -641,13 +584,20 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                                     'rgb(190,190,190)',
                                             }}
                                         ></div>
-
+                                    </>
+                                )}
+                                <canvas
+                                    ref={canvasOverlayRef}
+                                    style={{ cursor }}
+                                />
+                                {startPoint != null && endPoint != null && (
+                                    <>
                                         {/* handles */}
                                         <div
                                             style={{
                                                 position: 'absolute',
-                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
-                                                top: `${(startPoint.y / image.height) * height}px`,
+                                                left: `${(startPoint.x / image.width) * perceivedImageWidth - 3}px`,
+                                                top: `${(startPoint.y / image.height) * height - 3}px`,
                                                 width: '30px',
                                                 height: '4px',
                                                 backgroundColor: 'white',
@@ -656,8 +606,8 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                         <div
                                             style={{
                                                 position: 'absolute',
-                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
-                                                top: `${(startPoint.y / image.height) * height}px`,
+                                                left: `${(startPoint.x / image.width) * perceivedImageWidth - 3}px`,
+                                                top: `${(startPoint.y / image.height) * height - 3}px`,
                                                 width: '4px',
                                                 height: '30px',
                                                 backgroundColor: 'white',
@@ -667,8 +617,8 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                         <div
                                             style={{
                                                 position: 'absolute',
-                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 30}px`,
-                                                top: `${(startPoint.y / image.height) * height}px`,
+                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 30 + 3}px`,
+                                                top: `${(startPoint.y / image.height) * height - 3}px`,
                                                 width: '30px',
                                                 height: '4px',
                                                 backgroundColor: 'white',
@@ -677,8 +627,8 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                         <div
                                             style={{
                                                 position: 'absolute',
-                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 4}px`,
-                                                top: `${(startPoint.y / image.height) * height}px`,
+                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 1}px`,
+                                                top: `${(startPoint.y / image.height) * height - 3}px`,
                                                 width: '4px',
                                                 height: '30px',
                                                 backgroundColor: 'white',
@@ -688,8 +638,8 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                         <div
                                             style={{
                                                 position: 'absolute',
-                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 30}px`,
-                                                top: `${(endPoint.y / image.height) * height - 4}px`,
+                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 30 + 3}px`,
+                                                top: `${(endPoint.y / image.height) * height - 1}px`,
                                                 width: '30px',
                                                 height: '4px',
                                                 backgroundColor: 'white',
@@ -698,8 +648,8 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                         <div
                                             style={{
                                                 position: 'absolute',
-                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 4}px`,
-                                                top: `${(endPoint.y / image.height) * height - 30}px`,
+                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 1}px`,
+                                                top: `${(endPoint.y / image.height) * height - 30 + 3}px`,
                                                 width: '4px',
                                                 height: '30px',
                                                 backgroundColor: 'white',
@@ -709,8 +659,8 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                         <div
                                             style={{
                                                 position: 'absolute',
-                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
-                                                top: `${(endPoint.y / image.height) * height - 4}px`,
+                                                left: `${(startPoint.x / image.width) * perceivedImageWidth - 3}px`,
+                                                top: `${(endPoint.y / image.height) * height - 1}px`,
                                                 width: '30px',
                                                 height: '4px',
                                                 backgroundColor: 'white',
@@ -719,8 +669,8 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                         <div
                                             style={{
                                                 position: 'absolute',
-                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
-                                                top: `${(endPoint.y / image.height) * height - 30}px`,
+                                                left: `${(startPoint.x / image.width) * perceivedImageWidth - 3}px`,
+                                                top: `${(endPoint.y / image.height) * height - 30 + 3}px`,
                                                 width: '4px',
                                                 height: '30px',
                                                 backgroundColor: 'white',
@@ -728,10 +678,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                         ></div>
                                     </>
                                 )}
-                                <canvas
-                                    ref={canvasOverlayRef}
-                                    style={{ cursor }}
-                                />
                             </div>
                             <HStack marginTop={2} alignItems="end">
                                 <Field.Root width="max-content">
