@@ -241,8 +241,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             const smallestDistance = Math.min(
                                 ...Object.values(distances)
                             );
-                            console.log(distances.topLeft === smallestDistance);
-                            console.log(smallestDistance === distances.topLeft);
                             if (smallestDistance === distances.topLeft) {
                                 movedCorner = 'top-left';
                             } else if (
@@ -259,7 +257,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                 movedCorner = 'bottom-right';
                             }
                         }
-                        console.log(movedCorner);
                     };
                     const onMouseMove = (e: MouseEvent) => {
                         // const x =
@@ -427,7 +424,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             if (y2 > canvasOverlay.height)
                                 y2 = canvasOverlay.height;
 
-                            console.log(x1, old.x1);
                             if (x1 + 60 > old.x2) x1 = old.x1;
                             if (y2 - 60 < old.y1) y2 = old.y2;
 
