@@ -84,7 +84,7 @@ function App() {
         setAspectRatio(aspectRatio);
         setColor(getGridColorSuggestion(img));
         setLineThickness(
-            getLineThicknessSuggestion(img.naturalWidth, img.naturalHeight),
+            getLineThicknessSuggestion(img.naturalWidth, img.naturalHeight)
         );
         setRows(rows);
         setColumns(columns);
@@ -115,7 +115,7 @@ function App() {
             suggestGrids(image);
             setIsLoading(true);
         },
-        [suggestGrids],
+        [suggestGrids]
     );
 
     useEffect(() => {
@@ -139,7 +139,7 @@ function App() {
                         0,
                         cellHeight * y - lineThickness / 2,
                         w,
-                        lineThickness,
+                        lineThickness
                     );
                 }
                 for (let x = 1; x < columns; x++) {
@@ -147,7 +147,7 @@ function App() {
                         cellWidth * x - lineThickness / 2,
                         0,
                         lineThickness,
-                        h,
+                        h
                     );
                 }
                 ctx.strokeStyle = color;
@@ -159,7 +159,7 @@ function App() {
                             ctx.moveTo(cellWidth * x, cellHeight * y);
                             ctx.lineTo(
                                 cellWidth * (x + 1),
-                                cellHeight * (y + 1),
+                                cellHeight * (y + 1)
                             );
                             ctx.stroke();
                             ctx.closePath();
@@ -184,7 +184,7 @@ function App() {
                                 cellWidth * x +
                                     cellWidth / 2 -
                                     cellId.length * (fontSize / 4),
-                                cellHeight * y + cellHeight / 2 + fontSize / 3,
+                                cellHeight * y + cellHeight / 2 + fontSize / 3
                             );
                         }
                     }
@@ -203,17 +203,17 @@ function App() {
     ]);
     const pxPerColumn = useMemo(
         () => (image ? Math.round(image.naturalWidth / columns) : 1),
-        [image, columns],
+        [image, columns]
     );
     const pxPerRow = useMemo(
         () => (image ? Math.round(image.naturalHeight / rows) : 1),
-        [image, rows],
+        [image, rows]
     );
     const cellAspectRatio: AspectRatio = useMemo(() => {
         if (!image) return getAspectRatio(100, 100);
         return getAspectRatio(
             image.naturalWidth / columns,
-            image.naturalHeight / rows,
+            image.naturalHeight / rows
         );
     }, [image, columns, rows]);
     const isMobile = useMemo(() => {
@@ -224,7 +224,7 @@ function App() {
             aspectRatio?.widthComponent ?? 1,
             aspectRatio?.heightComponent ?? 1,
             cellAspectRatio.widthComponent,
-            cellAspectRatio.heightComponent,
+            cellAspectRatio.heightComponent
         );
     }, [aspectRatio, cellAspectRatio]);
     const { canHalve, canSubstract, canAdd } = useMemo(() => {
@@ -234,7 +234,7 @@ function App() {
         const newSubRatio: AspectRatio = image
             ? getAspectRatio(
                   image.naturalWidth / (columns - gridStep.deltaC),
-                  image.naturalHeight / (rows - gridStep.deltaR),
+                  image.naturalHeight / (rows - gridStep.deltaR)
               )
             : getAspectRatio(100, 100);
         const canSubstract =
@@ -245,7 +245,7 @@ function App() {
         const newAddRatio: AspectRatio = image
             ? getAspectRatio(
                   image.naturalWidth / (columns + gridStep.deltaC),
-                  image.naturalHeight / (rows + gridStep.deltaR),
+                  image.naturalHeight / (rows + gridStep.deltaR)
               )
             : getAspectRatio(100, 100);
         const canAdd =
@@ -295,7 +295,7 @@ function App() {
             };
             reader.readAsDataURL(file);
         },
-        [suggestGrids],
+        [suggestGrids]
     );
     const handleReflectVertically = useCallback<() => void>(() => {
         if (!image) return;
@@ -389,10 +389,7 @@ function App() {
                                 }}
                             ></canvas>
                             {isLoading && (
-                                <Box
-                                    pos="absolute"
-                                    inset="0"
-                                >
+                                <Box pos="absolute" inset="0">
                                     <Center h="full">
                                         <Spinner
                                             size="lg"
@@ -421,10 +418,7 @@ function App() {
                                 backgroundColor={COLOR.FG}
                                 _hover={{ backgroundColor: COLOR.FG2 }}
                             >
-                                <Icon
-                                    size="md"
-                                    color="fg.muted"
-                                >
+                                <Icon size="md" color="fg.muted">
                                     <LuUpload />
                                 </Icon>
                                 <FileUpload.DropzoneContent>
@@ -449,10 +443,7 @@ function App() {
                     overflowY={isMobile ? 'unset' : 'scroll'}
                     zIndex="1"
                 >
-                    <Heading
-                        size="md"
-                        paddingTop="8px"
-                    >
+                    <Heading size="md" paddingTop="8px">
                         Image
                     </Heading>
                     {image == null && (
@@ -478,10 +469,7 @@ function App() {
                         >
                             <FileUpload.HiddenInput data-test-name="upload-file-input" />
                             <FileUpload.Trigger asChild>
-                                <Button
-                                    variant="surface"
-                                    size="sm"
-                                >
+                                <Button variant="surface" size="sm">
                                     <HiUpload /> Load image
                                 </Button>
                             </FileUpload.Trigger>
@@ -561,10 +549,7 @@ function App() {
                                 />
                             </HStack>
 
-                            <InputGroup
-                                endAddon=".PNG"
-                                marginBottom="4px"
-                            >
+                            <InputGroup endAddon=".PNG" marginBottom="4px">
                                 <Input
                                     width="100%"
                                     placeholder="File name"
@@ -604,16 +589,10 @@ function App() {
                         </>
                     )}
                     <Separator margin="8px 0" />
-                    <Heading
-                        size="md"
-                        color={COLOR.TEXT2}
-                    >
+                    <Heading size="md" color={COLOR.TEXT2}>
                         Grid
                     </Heading>
-                    <HStack
-                        flexWrap="wrap"
-                        alignItems="start"
-                    >
+                    <HStack flexWrap="wrap" alignItems="start">
                         <Field.Root width="max-content">
                             <Field.Label>Number of rows</Field.Label>
                             <NumberInput.Root
@@ -664,7 +643,7 @@ function App() {
                                 <Field.HelperText>
                                     {pxPerColumn}px per column (
                                     {(Math.round(1000 / columns) / 10).toFixed(
-                                        1,
+                                        1
                                     )}
                                     %)
                                 </Field.HelperText>
@@ -711,7 +690,7 @@ function App() {
                                     onClick={() => {
                                         if (canAdd) {
                                             setColumns(
-                                                columns + gridStep.deltaC,
+                                                columns + gridStep.deltaC
                                             );
                                             setRows(rows + gridStep.deltaR);
                                         }
@@ -729,7 +708,7 @@ function App() {
                                     onClick={() => {
                                         if (canSubstract) {
                                             setColumns(
-                                                columns - gridStep.deltaC,
+                                                columns - gridStep.deltaC
                                             );
                                             setRows(rows - gridStep.deltaR);
                                         }
@@ -741,10 +720,7 @@ function App() {
                             </Tooltip>
                         </HStack>
                     )}
-                    <HStack
-                        gap={2}
-                        alignItems="end"
-                    >
+                    <HStack gap={2} alignItems="end">
                         <Field.Root width="max-content">
                             <Field.Label>Line thickness</Field.Label>
                             <NumberInput.Root
@@ -786,10 +762,7 @@ function App() {
                         </Stack>
                     </HStack>
                     <Separator margin="8px 0" />
-                    <Heading
-                        size="md"
-                        color={COLOR.TEXT2}
-                    >
+                    <Heading size="md" color={COLOR.TEXT2}>
                         Color
                     </Heading>
                     <ColorPicker.Root
@@ -818,16 +791,8 @@ function App() {
                         </ColorPicker.Content>
                     </ColorPicker.Root>
                 </Stack>
-                <HStack
-                    position="fixed"
-                    bottom="0"
-                    right="14px"
-                    zIndex={2}
-                >
-                    <Text
-                        fontSize="0.8em"
-                        color="rgba(255, 255, 255, 0.5)"
-                    >
+                <HStack position="fixed" bottom="0" right="14px" zIndex={2}>
+                    <Text fontSize="0.8em" color="rgba(255, 255, 255, 0.5)">
                         {import.meta.env.MODE === 'development'
                             ? 'dev'
                             : __COMMIT_HASH__}

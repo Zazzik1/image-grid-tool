@@ -11,6 +11,12 @@ import {
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaCropSimple } from 'react-icons/fa6';
+import {
+    CropAreaBoundary,
+    CropAreaGrid,
+    CropAreaHandles,
+    CropAreaProps,
+} from './CropArea';
 
 type Props = {
     image: HTMLImageElement;
@@ -463,6 +469,15 @@ const CroppingTool = ({ image, onSave }: Props) => {
     ]);
     const perceivedImageWidth =
         (image.naturalWidth / image.naturalHeight) * height;
+    const cropAreaProps: CropAreaProps = {
+        x1: startPoint.x,
+        y1: startPoint.y,
+        x2: endPoint.x,
+        y2: endPoint.y,
+        image,
+        height,
+        perceivedImageWidth,
+    };
     return (
         <Dialog.Root
             size="full"
@@ -491,193 +506,13 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                 }}
                             >
                                 <canvas ref={canvasRef} />
-                                {startPoint != null && endPoint != null && (
-                                    <>
-                                        {/* boundaries */}
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
-                                                top: `${(startPoint.y / image.height) * height}px`,
-                                                width: `${((endPoint.x - startPoint.x) / image.width) * perceivedImageWidth}px`,
-                                                height: '1px',
-                                                backgroundColor:
-                                                    'rgb(190,190,190)',
-                                            }}
-                                        ></div>
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
-                                                top: `${(endPoint.y / image.height) * height - 1}px`,
-                                                width: `${((endPoint.x - startPoint.x) / image.width) * perceivedImageWidth}px`,
-                                                height: '1px',
-                                                backgroundColor:
-                                                    'rgb(190,190,190)',
-                                            }}
-                                        ></div>
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
-                                                top: `${(startPoint.y / image.height) * height}px`,
-                                                width: '1px',
-                                                height: `${((endPoint.y - startPoint.y) / image.height) * height}px`,
-                                                backgroundColor:
-                                                    'rgb(190,190,190)',
-                                            }}
-                                        ></div>
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 1}px`,
-                                                top: `${(startPoint.y / image.height) * height}px`,
-                                                width: '1px',
-                                                height: `${((endPoint.y - startPoint.y) / image.height) * height}px`,
-                                                backgroundColor:
-                                                    'rgb(190,190,190)',
-                                            }}
-                                        ></div>
-
-                                        {/* grids */}
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${((startPoint.x + ((endPoint.x - startPoint.x) * 1) / 3) / image.width) * perceivedImageWidth}px`,
-                                                top: `${(startPoint.y / image.height) * height}px`,
-                                                width: '1px',
-                                                height: `${((endPoint.y - startPoint.y) / image.height) * height}px`,
-                                                backgroundColor:
-                                                    'rgb(190,190,190)',
-                                            }}
-                                        ></div>
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${((startPoint.x + ((endPoint.x - startPoint.x) * 2) / 3) / image.width) * perceivedImageWidth}px`,
-                                                top: `${(startPoint.y / image.height) * height}px`,
-                                                width: '1px',
-                                                height: `${((endPoint.y - startPoint.y) / image.height) * height}px`,
-                                                backgroundColor:
-                                                    'rgb(190,190,190)',
-                                            }}
-                                        ></div>
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
-                                                top: `${((startPoint.y + ((endPoint.y - startPoint.y) * 1) / 3) / image.height) * height}px`,
-                                                width: `${((endPoint.x - startPoint.x) / image.width) * perceivedImageWidth}px`,
-                                                height: '1px',
-                                                backgroundColor:
-                                                    'rgb(190,190,190)',
-                                            }}
-                                        ></div>
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${(startPoint.x / image.width) * perceivedImageWidth}px`,
-                                                top: `${((startPoint.y + ((endPoint.y - startPoint.y) * 2) / 3) / image.height) * height}px`,
-                                                width: `${((endPoint.x - startPoint.x) / image.width) * perceivedImageWidth}px`,
-                                                height: '1px',
-                                                backgroundColor:
-                                                    'rgb(190,190,190)',
-                                            }}
-                                        ></div>
-                                    </>
-                                )}
+                                <CropAreaBoundary {...cropAreaProps} />
+                                <CropAreaGrid {...cropAreaProps} />
                                 <canvas
                                     ref={canvasOverlayRef}
                                     style={{ cursor }}
                                 />
-                                {startPoint != null && endPoint != null && (
-                                    <>
-                                        {/* handles */}
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${(startPoint.x / image.width) * perceivedImageWidth - 3}px`,
-                                                top: `${(startPoint.y / image.height) * height - 3}px`,
-                                                width: '30px',
-                                                height: '4px',
-                                                backgroundColor: 'white',
-                                            }}
-                                        ></div>
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${(startPoint.x / image.width) * perceivedImageWidth - 3}px`,
-                                                top: `${(startPoint.y / image.height) * height - 3}px`,
-                                                width: '4px',
-                                                height: '30px',
-                                                backgroundColor: 'white',
-                                            }}
-                                        ></div>
-
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 30 + 3}px`,
-                                                top: `${(startPoint.y / image.height) * height - 3}px`,
-                                                width: '30px',
-                                                height: '4px',
-                                                backgroundColor: 'white',
-                                            }}
-                                        ></div>
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 1}px`,
-                                                top: `${(startPoint.y / image.height) * height - 3}px`,
-                                                width: '4px',
-                                                height: '30px',
-                                                backgroundColor: 'white',
-                                            }}
-                                        ></div>
-
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 30 + 3}px`,
-                                                top: `${(endPoint.y / image.height) * height - 1}px`,
-                                                width: '30px',
-                                                height: '4px',
-                                                backgroundColor: 'white',
-                                            }}
-                                        ></div>
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${(endPoint.x / image.width) * perceivedImageWidth - 1}px`,
-                                                top: `${(endPoint.y / image.height) * height - 30 + 3}px`,
-                                                width: '4px',
-                                                height: '30px',
-                                                backgroundColor: 'white',
-                                            }}
-                                        ></div>
-
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${(startPoint.x / image.width) * perceivedImageWidth - 3}px`,
-                                                top: `${(endPoint.y / image.height) * height - 1}px`,
-                                                width: '30px',
-                                                height: '4px',
-                                                backgroundColor: 'white',
-                                            }}
-                                        ></div>
-                                        <div
-                                            style={{
-                                                position: 'absolute',
-                                                left: `${(startPoint.x / image.width) * perceivedImageWidth - 3}px`,
-                                                top: `${(endPoint.y / image.height) * height - 30 + 3}px`,
-                                                width: '4px',
-                                                height: '30px',
-                                                backgroundColor: 'white',
-                                            }}
-                                        ></div>
-                                    </>
-                                )}
+                                <CropAreaHandles {...cropAreaProps} />
                             </div>
                             <HStack marginTop={2} alignItems="end">
                                 <Field.Root width="max-content">
