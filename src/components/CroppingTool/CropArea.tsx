@@ -1,3 +1,5 @@
+import { CANVAS_HEIGHT } from './const';
+
 export type CropAreaProps = {
     x1: number;
     y1: number;
@@ -5,7 +7,6 @@ export type CropAreaProps = {
     y2: number;
     image: { width: number; height: number };
     perceivedImageWidth: number;
-    height: number;
 };
 
 const COLOR_PRIMARY = 'white';
@@ -44,18 +45,17 @@ export const TopLeftHandle = ({
     y1,
     image,
     perceivedImageWidth,
-    height,
 }: CropAreaProps) => (
     <>
         <Box
             x={(x1 / image.width) * perceivedImageWidth - LENGTH_B + 1}
-            y={(y1 / image.height) * height - LENGTH_B + 1}
+            y={(y1 / image.height) * CANVAS_HEIGHT - LENGTH_B + 1}
             w={LENGTH_A}
             h={LENGTH_B}
         />
         <Box
             x={(x1 / image.width) * perceivedImageWidth - LENGTH_B + 1}
-            y={(y1 / image.height) * height - LENGTH_B + 1}
+            y={(y1 / image.height) * CANVAS_HEIGHT - LENGTH_B + 1}
             w={LENGTH_B}
             h={LENGTH_A}
         />
@@ -67,7 +67,6 @@ export const TopRightHandle = ({
     x2,
     image,
     perceivedImageWidth,
-    height,
 }: CropAreaProps) => (
     <>
         <Box
@@ -77,13 +76,13 @@ export const TopRightHandle = ({
                 LENGTH_B -
                 1
             }
-            y={(y1 / image.height) * height - LENGTH_B + 1}
+            y={(y1 / image.height) * CANVAS_HEIGHT - LENGTH_B + 1}
             w={LENGTH_A}
             h={LENGTH_B}
         />
         <Box
             x={(x2 / image.width) * perceivedImageWidth - 1}
-            y={(y1 / image.height) * height - LENGTH_B + 1}
+            y={(y1 / image.height) * CANVAS_HEIGHT - LENGTH_B + 1}
             w={LENGTH_B}
             h={LENGTH_A}
         />
@@ -95,7 +94,6 @@ export const BottomRightHandle = ({
     y2,
     image,
     perceivedImageWidth,
-    height,
 }: CropAreaProps) => (
     <>
         <Box
@@ -105,13 +103,13 @@ export const BottomRightHandle = ({
                 LENGTH_B -
                 1
             }
-            y={(y2 / image.height) * height - 1}
+            y={(y2 / image.height) * CANVAS_HEIGHT - 1}
             w={LENGTH_A}
             h={LENGTH_B}
         />
         <Box
             x={(x2 / image.width) * perceivedImageWidth - 1}
-            y={(y2 / image.height) * height - LENGTH_A + LENGTH_B - 1}
+            y={(y2 / image.height) * CANVAS_HEIGHT - LENGTH_A + LENGTH_B - 1}
             w={LENGTH_B}
             h={LENGTH_A}
         />
@@ -123,18 +121,17 @@ export const BottomLeftHandle = ({
     y2,
     image,
     perceivedImageWidth,
-    height,
 }: CropAreaProps) => (
     <>
         <Box
             x={(x1 / image.width) * perceivedImageWidth - LENGTH_B + 1}
-            y={(y2 / image.height) * height - 1}
+            y={(y2 / image.height) * CANVAS_HEIGHT - 1}
             w={LENGTH_A}
             h={LENGTH_B}
         />
         <Box
             x={(x1 / image.width) * perceivedImageWidth - LENGTH_B + 1}
-            y={(y2 / image.height) * height - LENGTH_A + LENGTH_B - 1}
+            y={(y2 / image.height) * CANVAS_HEIGHT - LENGTH_A + LENGTH_B - 1}
             w={LENGTH_B}
             h={LENGTH_A}
         />
@@ -157,7 +154,6 @@ export const CropAreaGrid = ({
     y2,
     image,
     perceivedImageWidth,
-    height,
 }: CropAreaProps) => (
     <>
         <Box
@@ -165,9 +161,9 @@ export const CropAreaGrid = ({
                 ((x1 + ((x2 - x1) * 1) / 3 - 1) / image.width) *
                 perceivedImageWidth
             }
-            y={(y1 / image.height) * height}
+            y={(y1 / image.height) * CANVAS_HEIGHT}
             w={1}
-            h={((y2 - y1) / image.height) * height}
+            h={((y2 - y1) / image.height) * CANVAS_HEIGHT}
             color={COLOR_SECONDARY}
         />
         <Box
@@ -175,21 +171,21 @@ export const CropAreaGrid = ({
                 ((x1 + ((x2 - x1) * 2) / 3 - 1) / image.width) *
                 perceivedImageWidth
             }
-            y={(y1 / image.height) * height}
+            y={(y1 / image.height) * CANVAS_HEIGHT}
             w={1}
-            h={((y2 - y1) / image.height) * height}
+            h={((y2 - y1) / image.height) * CANVAS_HEIGHT}
             color={COLOR_SECONDARY}
         />
         <Box
             x={(x1 / image.width) * perceivedImageWidth}
-            y={((y1 + ((y2 - y1) * 1) / 3 - 1) / image.height) * height}
+            y={((y1 + ((y2 - y1) * 1) / 3 - 1) / image.height) * CANVAS_HEIGHT}
             w={((x2 - x1) / image.width) * perceivedImageWidth}
             h={1}
             color={COLOR_SECONDARY}
         />
         <Box
             x={(x1 / image.width) * perceivedImageWidth}
-            y={((y1 + ((y2 - y1) * 2) / 3 - 1) / image.height) * height}
+            y={((y1 + ((y2 - y1) * 2) / 3 - 1) / image.height) * CANVAS_HEIGHT}
             w={((x2 - x1) / image.width) * perceivedImageWidth}
             h={1}
             color={COLOR_SECONDARY}
@@ -204,35 +200,34 @@ export const CropAreaBoundary = ({
     y2,
     image,
     perceivedImageWidth,
-    height,
 }: CropAreaProps) => (
     <>
         <Box
             x={(x1 / image.width) * perceivedImageWidth}
-            y={(y1 / image.height) * height}
+            y={(y1 / image.height) * CANVAS_HEIGHT}
             w={((x2 - x1) / image.width) * perceivedImageWidth}
             h={1}
             color={COLOR_SECONDARY}
         />
         <Box
             x={(x1 / image.width) * perceivedImageWidth}
-            y={(y2 / image.height) * height - 1}
+            y={(y2 / image.height) * CANVAS_HEIGHT - 1}
             w={((x2 - x1) / image.width) * perceivedImageWidth}
-            h={1}
+            h={3}
             color={COLOR_SECONDARY}
         />
         <Box
             x={(x1 / image.width) * perceivedImageWidth}
-            y={(y1 / image.height) * height}
+            y={(y1 / image.height) * CANVAS_HEIGHT}
             w={1}
-            h={((y2 - y1) / image.height) * height}
+            h={((y2 - y1) / image.height) * CANVAS_HEIGHT}
             color={COLOR_SECONDARY}
         />
         <Box
             x={(x2 / image.width) * perceivedImageWidth - 1}
-            y={(y1 / image.height) * height}
+            y={(y1 / image.height) * CANVAS_HEIGHT}
             w={1}
-            h={((y2 - y1) / image.height) * height}
+            h={((y2 - y1) / image.height) * CANVAS_HEIGHT}
             color={COLOR_SECONDARY}
         />
     </>

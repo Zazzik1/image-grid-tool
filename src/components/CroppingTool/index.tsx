@@ -17,18 +17,12 @@ import {
     CropAreaHandles,
     CropAreaProps,
 } from './CropArea';
+import { CANVAS_HEIGHT } from './const';
 
 type Props = {
     image: HTMLImageElement;
     onSave: (image: HTMLImageElement) => void;
 };
-
-// function getSign(x1: number, y1: number, x2: number, y2: number) {
-//     return (((y2 - y1) / Math.abs(y2 - y1)) * (x2 - x1)) / Math.abs(x2 - x1);
-// }
-
-// todo - rename
-const height = 600;
 
 const CroppingTool = ({ image, onSave }: Props) => {
     const bodyRef = useRef<HTMLDivElement>(null);
@@ -133,10 +127,8 @@ const CroppingTool = ({ image, onSave }: Props) => {
 
         overlayCtx.clearRect(0, 0, w, h);
         overlayCtx.fillStyle = '#0000006e';
-        overlayCtx.fillRect(0, 0, w, y1);
-        overlayCtx.fillRect(0, y2, w, h);
-        overlayCtx.fillRect(0, y1, x1, y2 - y1);
-        overlayCtx.fillRect(x2, y1, w, y2 - y1);
+        overlayCtx.fillRect(0, 0, w, h);
+        overlayCtx.clearRect(x1, y1, x2 - x1, y2 - y1);
     }, []);
 
     useEffect(() => {
@@ -151,9 +143,9 @@ const CroppingTool = ({ image, onSave }: Props) => {
             if (canvas && body && canvasOverlay) {
                 canvas.width = image.naturalWidth;
                 canvas.height = image.naturalHeight;
-                canvas.style.height = `${height}px`;
+                canvas.style.height = `${CANVAS_HEIGHT}px`;
                 canvas.style.width = `${
-                    (image.naturalWidth / image.naturalHeight) * height
+                    (image.naturalWidth / image.naturalHeight) * CANVAS_HEIGHT
                 }px`;
 
                 canvasOverlay.width = image.naturalWidth;
@@ -257,14 +249,13 @@ const CroppingTool = ({ image, onSave }: Props) => {
                         }
                     };
                     const onMouseMove = (e: MouseEvent) => {
-                        const dx =
-                            ((e.movementX * image.width) /
-                                canvasOverlay.width) *
-                            2;
-                        const dy =
-                            ((e.movementY * image.height) /
-                                canvasOverlay.height) *
-                            2;
+                        const rect = canvasOverlay.getBoundingClientRect();
+
+                        const scaleX = canvasOverlay.width / rect.width;
+                        const scaleY = canvasOverlay.height / rect.height;
+
+                        const dx = e.movementX * scaleX;
+                        const dy = e.movementY * scaleY;
                         // todo - support for forced aspect ratio
                         // const dy = aspectRatio.force
                         //     ? (e.movementX * aspectRatio.heightComponent) /
@@ -468,14 +459,13 @@ const CroppingTool = ({ image, onSave }: Props) => {
         aspectRatio.heightComponent,
     ]);
     const perceivedImageWidth =
-        (image.naturalWidth / image.naturalHeight) * height;
+        (image.naturalWidth / image.naturalHeight) * CANVAS_HEIGHT;
     const cropAreaProps: CropAreaProps = {
         x1: startPoint.x,
         y1: startPoint.y,
         x2: endPoint.x,
         y2: endPoint.y,
         image,
-        height,
         perceivedImageWidth,
     };
     return (
