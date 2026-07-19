@@ -182,33 +182,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             (e.offsetY * canvasOverlay.height) /
                                 +canvasOverlay.style.height.split('px')[0]
                         );
-                        // if (!startPoint && !endPoint) {
-                        //     setStartPoint({ x, y });
-                        // }
-                        // if (startPoint && !endPoint) {
-                        //     if (aspectRatio.force) {
-                        //         const newY: number =
-                        //             (aspectRatio.heightComponent /
-                        //                 aspectRatio.widthComponent) *
-                        //                 getSign(
-                        //                     startPoint.x,
-                        //                     startPoint.y,
-                        //                     x,
-                        //                     y,
-                        //                 ) *
-                        //                 (x - startPoint.x) +
-                        //             startPoint.y;
-                        //         setEndPoint({
-                        //             x,
-                        //             y:
-                        //                 y <= canvasOverlay.height
-                        //                     ? newY
-                        //                     : canvasOverlay.height,
-                        //         });
-                        //     } else {
-                        //         setEndPoint({ x, y });
-                        //     }
-                        // }
 
                         const { x1, x2, y1, y2 } = area.current;
                         if (x >= x1 && x <= x2 && y >= y1 && y <= y2) {
@@ -257,13 +230,13 @@ const CroppingTool = ({ image, onSave }: Props) => {
                         const dx = e.movementX * scaleX;
                         const dy = e.movementY * scaleY;
                         // todo - support for forced aspect ratio
-                        // const dy = aspectRatio.force
-                        //     ? (e.movementX * aspectRatio.heightComponent) /
-                        //       aspectRatio.widthComponent
-                        //     : e.movementY * 2;
                         const old = {
                             ...area.current,
                         };
+                        const ratio =
+                            aspectRatio.heightComponent /
+                            aspectRatio.widthComponent;
+
                         if (movedCorner === 'inside-area') {
                             let x1 = old.x1 + dx;
                             let x2 = old.x2 + dx;
@@ -298,7 +271,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             };
 
                             renderBackdrop();
-                            // todo - move rendering of grid from css to canvas:
                             setStartPoint({
                                 x: x1,
                                 y: y1,
@@ -315,6 +287,28 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             if (x1 < 0) x1 = 0;
                             if (y1 < 0) y1 = 0;
 
+                            if (aspectRatio.force) {
+                                const widthFromX = old.x2 - x1;
+                                const heightFromY = old.y2 - y1;
+
+                                if (Math.abs(dx) > Math.abs(dy / ratio)) {
+                                    const newHeight = widthFromX * ratio;
+                                    y1 = old.y2 - newHeight;
+                                    if (y1 < 0) {
+                                        y1 = old.y1;
+                                        x1 = old.x1;
+                                    }
+                                } else {
+                                    const newHeight = heightFromY;
+                                    const newWidth = newHeight / ratio;
+                                    x1 = old.x2 - newWidth;
+                                    if (x1 < 0) {
+                                        y1 = old.y1;
+                                        x1 = old.x1;
+                                    }
+                                }
+                            }
+
                             if (x1 + 60 > old.x2) x1 = old.x1;
                             if (y1 + 60 > old.y2) y1 = old.y1;
 
@@ -325,7 +319,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             };
 
                             renderBackdrop();
-                            // todo - move rendering of grid from css to canvas:
                             setStartPoint({
                                 x: x1,
                                 y: y1,
@@ -339,6 +332,28 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                 x2 = canvasOverlay.width;
                             if (y1 < 0) y1 = 0;
 
+                            if (aspectRatio.force) {
+                                const widthFromX = x2 - old.x1;
+                                const heightFromY = old.y2 - y1;
+
+                                if (Math.abs(dx) > Math.abs(dy / ratio)) {
+                                    const newHeight = widthFromX * ratio;
+                                    y1 = old.y2 - newHeight;
+                                    if (y1 < 0) {
+                                        y1 = old.y1;
+                                        x2 = old.x2;
+                                    }
+                                } else {
+                                    const newHeight = heightFromY;
+                                    const newWidth = newHeight / ratio;
+                                    x2 = old.x1 + newWidth;
+                                    if (x2 > canvasOverlay.width) {
+                                        y1 = old.y1;
+                                        x2 = old.x2;
+                                    }
+                                }
+                            }
+
                             if (x2 - 60 < old.x1) x2 = old.x2;
                             if (y1 + 60 > old.y2) y1 = old.y1;
 
@@ -349,7 +364,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             };
 
                             renderBackdrop();
-                            // todo - move rendering of grid from css to canvas:
                             setEndPoint({
                                 x: x2,
                                 y: old.y2,
@@ -367,6 +381,28 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             if (y2 > canvasOverlay.height)
                                 y2 = canvasOverlay.height;
 
+                            if (aspectRatio.force) {
+                                const widthFromX = old.x2 - x1;
+                                const heightFromY = y2 - old.y1;
+
+                                if (Math.abs(dx) > Math.abs(dy / ratio)) {
+                                    const newHeight = widthFromX * ratio;
+                                    y2 = old.y1 + newHeight;
+                                    if (y2 > canvasOverlay.height) {
+                                        y2 = old.y2;
+                                        x1 = old.x1;
+                                    }
+                                } else {
+                                    const newHeight = heightFromY;
+                                    const newWidth = newHeight / ratio;
+                                    x1 = old.x2 - newWidth;
+                                    if (x1 < 0) {
+                                        y2 = old.y2;
+                                        x1 = old.x1;
+                                    }
+                                }
+                            }
+
                             if (x1 + 60 > old.x2) x1 = old.x1;
                             if (y2 - 60 < old.y1) y2 = old.y2;
 
@@ -377,7 +413,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             };
 
                             renderBackdrop();
-                            // todo - move rendering of grid from css to canvas:
                             setEndPoint({
                                 x: old.x2,
                                 y: y2,
@@ -396,6 +431,28 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             if (y2 > canvasOverlay.height)
                                 y2 = canvasOverlay.height;
 
+                            if (aspectRatio.force) {
+                                const widthFromX = x2 - old.x1;
+                                const heightFromY = y2 - old.y1;
+
+                                if (Math.abs(dx) > Math.abs(dy / ratio)) {
+                                    const newHeight = widthFromX * ratio;
+                                    y2 = old.y1 + newHeight;
+                                    if (y2 > canvasOverlay.height) {
+                                        y2 = old.y2;
+                                        x2 = old.x2;
+                                    }
+                                } else {
+                                    const newHeight = heightFromY;
+                                    const newWidth = newHeight / ratio;
+                                    x2 = old.x1 + newWidth;
+                                    if (x2 > canvasOverlay.width) {
+                                        y2 = old.y2;
+                                        x2 = old.x2;
+                                    }
+                                }
+                            }
+
                             if (x2 - 60 < old.x1) x2 = old.x2;
                             if (y2 - 60 < old.y1) y2 = old.y2;
 
@@ -406,7 +463,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
                             };
 
                             renderBackdrop();
-                            // todo - move rendering of grid from css to canvas:
                             setEndPoint({
                                 x: x2,
                                 y: y2,
