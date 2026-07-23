@@ -7,7 +7,9 @@ import {
     Portal,
     NumberInput,
     HStack,
-    Field,
+    Heading,
+    Text,
+    Box,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaCropSimple } from 'react-icons/fa6';
@@ -111,13 +113,17 @@ const CroppingTool = ({ image, onSave }: Props) => {
     const handleResetPoints = useCallback(() => {
         setupInitialCropArea();
         renderBackdrop();
-        setOpen(false);
         setAspectRatio({
             force: true,
             heightComponent: 1,
             widthComponent: 1,
         });
     }, [image]);
+
+    const handleClose = useCallback(() => {
+        handleResetPoints();
+        setOpen(false);
+    }, [handleResetPoints]);
 
     const handleSave = useCallback(() => {
         if (!startPoint || !endPoint) return image; // no need to crop
@@ -139,11 +145,11 @@ const CroppingTool = ({ image, onSave }: Props) => {
         const img = new Image();
         img.onload = () => {
             onSave(img);
-            handleResetPoints();
+            handleClose();
         };
         tempCtx.putImageData(imageData, 0, 0);
         img.src = tempCanvas.toDataURL();
-    }, [onSave, image, startPoint, endPoint, handleResetPoints]);
+    }, [onSave, image, startPoint, endPoint, handleClose]);
 
     const renderBackdrop = useCallback(() => {
         const canvasOverlay = canvasOverlayRef.current;
@@ -564,7 +570,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
             lazyMount
             open={open}
             onOpenChange={(e) => setOpen(e.open)}
-            onExitComplete={handleResetPoints}
+            onExitComplete={handleClose}
         >
             <Dialog.Trigger asChild>
                 <Button size="sm" variant="surface">
@@ -594,112 +600,109 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                 />
                                 <CropAreaHandles {...cropAreaProps} />
                             </div>
-                            <HStack marginTop={2} alignItems="end">
-                                <Field.Root width="max-content">
-                                    <Field.Label>X</Field.Label>
-                                    <NumberInput.Root
-                                        size="sm"
-                                        maxW="100px"
-                                        disabled={!aspectRatio.force}
-                                        value={aspectRatio.widthComponent.toString()}
-                                        min={1}
-                                        onValueChange={(e: {
-                                            valueAsNumber: number;
-                                        }) => {
-                                            const value = e.valueAsNumber;
-                                            if (
-                                                Number.isNaN(value) ||
-                                                value < 0
-                                            )
-                                                return setAspectRatio(
-                                                    (old) => ({
-                                                        ...old,
-                                                        widthComponent: 1,
-                                                    })
-                                                );
-                                            return setAspectRatio((old) => ({
-                                                ...old,
-                                                widthComponent: value,
-                                            }));
-                                        }}
-                                    >
-                                        <NumberInput.Control />
-                                        <NumberInput.Input
-                                            backgroundColor={COLOR.BG}
-                                        />
-                                    </NumberInput.Root>
-                                </Field.Root>
-
-                                <Field.Root width="max-content">
-                                    <Field.Label>Y</Field.Label>
-                                    <NumberInput.Root
-                                        size="sm"
-                                        maxW="100px"
-                                        disabled={!aspectRatio.force}
-                                        value={aspectRatio.heightComponent.toString()}
-                                        min={1}
-                                        onValueChange={(e: {
-                                            valueAsNumber: number;
-                                        }) => {
-                                            const value = e.valueAsNumber;
-                                            if (
-                                                Number.isNaN(value) ||
-                                                value < 0
-                                            )
-                                                return setAspectRatio(
-                                                    (old) => ({
-                                                        ...old,
-                                                        heightComponent: 1,
-                                                    })
-                                                );
-                                            return setAspectRatio((old) => ({
-                                                ...old,
-                                                heightComponent: value,
-                                            }));
-                                        }}
-                                    >
-                                        <NumberInput.Control />
-                                        <NumberInput.Input
-                                            backgroundColor={COLOR.BG}
-                                        />
-                                    </NumberInput.Root>
-                                </Field.Root>
-                                <Checkbox.Root
+                            <br />
+                            <Heading size="lg">Aspect ratio</Heading>
+                            <HStack marginTop={2} gap={3}>
+                                <NumberInput.Root
                                     size="sm"
-                                    checked={aspectRatio.force}
-                                    onCheckedChange={(e) =>
-                                        setAspectRatio((old) => ({
+                                    maxW="60px"
+                                    disabled={!aspectRatio.force}
+                                    value={aspectRatio.widthComponent.toString()}
+                                    min={1}
+                                    onValueChange={(e: {
+                                        valueAsNumber: number;
+                                    }) => {
+                                        const value = e.valueAsNumber;
+                                        if (Number.isNaN(value) || value < 0)
+                                            return setAspectRatio((old) => ({
+                                                ...old,
+                                                widthComponent: 1,
+                                            }));
+                                        return setAspectRatio((old) => ({
                                             ...old,
-                                            force: !!e.checked,
-                                        }))
-                                    }
+                                            widthComponent: value,
+                                        }));
+                                    }}
                                 >
-                                    <Checkbox.HiddenInput />
-                                    <Checkbox.Control />
-                                    <Checkbox.Label>
-                                        Force aspect ratio X:Y (
-                                        {aspectRatio.widthComponent}:
-                                        {aspectRatio.heightComponent})
-                                    </Checkbox.Label>
-                                </Checkbox.Root>
+                                    <NumberInput.Control />
+                                    <NumberInput.Input
+                                        backgroundColor={COLOR.BG}
+                                    />
+                                </NumberInput.Root>
+                                <Text fontSize="lg">:</Text>
+                                <NumberInput.Root
+                                    size="sm"
+                                    maxW="60px"
+                                    disabled={!aspectRatio.force}
+                                    value={aspectRatio.heightComponent.toString()}
+                                    min={1}
+                                    onValueChange={(e: {
+                                        valueAsNumber: number;
+                                    }) => {
+                                        const value = e.valueAsNumber;
+                                        if (Number.isNaN(value) || value < 0)
+                                            return setAspectRatio((old) => ({
+                                                ...old,
+                                                heightComponent: 1,
+                                            }));
+                                        return setAspectRatio((old) => ({
+                                            ...old,
+                                            heightComponent: value,
+                                        }));
+                                    }}
+                                >
+                                    <NumberInput.Control />
+                                    <NumberInput.Input
+                                        backgroundColor={COLOR.BG}
+                                    />
+                                </NumberInput.Root>
                             </HStack>
-                            <Button
-                                marginTop="3"
-                                variant="surface"
-                                size="xs"
-                                disabled={!startPoint && !endPoint}
-                                onClick={handleResetPoints}
+                            <br />
+                            <Checkbox.Root
+                                size="sm"
+                                checked={aspectRatio.force}
+                                onCheckedChange={(e) =>
+                                    setAspectRatio((old) => ({
+                                        ...old,
+                                        force: !!e.checked,
+                                    }))
+                                }
                             >
-                                Reset points
-                            </Button>
+                                <Checkbox.HiddenInput />
+                                <Checkbox.Control />
+                                <Checkbox.Label>
+                                    Lock while resizing
+                                </Checkbox.Label>
+                            </Checkbox.Root>
+                            <br />
                         </Dialog.Body>
                         <Dialog.Footer>
-                            <Dialog.ActionTrigger asChild>
-                                <Button variant="outline">Cancel</Button>
-                            </Dialog.ActionTrigger>
-                            <Button colorPalette="blue" onClick={handleSave}>
-                                Save
-                            </Button>
+                            <HStack justifyContent="space-between" width="100%">
+                                <Box>
+                                    <Button
+                                        variant="surface"
+                                        colorPalette="red"
+                                        size="md"
+                                        disabled={!startPoint && !endPoint}
+                                        onClick={handleResetPoints}
+                                    >
+                                        Reset
+                                    </Button>
+                                </Box>
+                                <Box>
+                                    <Dialog.ActionTrigger asChild>
+                                        <Button variant="outline">
+                                            Cancel
+                                        </Button>
+                                    </Dialog.ActionTrigger>
+                                    <Button
+                                        colorPalette="blue"
+                                        onClick={handleSave}
+                                    >
+                                        Save
+                                    </Button>
+                                </Box>
+                            </HStack>
                         </Dialog.Footer>
                         <Dialog.CloseTrigger asChild>
                             <CloseButton size="sm" />
