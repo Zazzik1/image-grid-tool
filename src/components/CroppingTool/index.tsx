@@ -65,21 +65,51 @@ const CroppingTool = ({ image, onSave }: Props) => {
         heightComponent: 1,
     });
 
-    const handleResetPoints = useCallback(() => {
+    const setupInitialCropArea = useCallback(() => {
+        let width = image.width;
+        let height = image.height;
+        if (aspectRatio.force) {
+            const f = aspectRatio.widthComponent / aspectRatio.heightComponent;
+            if (image.width > image.height) {
+                height = image.height;
+                width = height * f;
+                if (width > image.width * 0.9) {
+                    width = width / f;
+                    height = height / f;
+                }
+            } else {
+                width = image.width;
+                height = width / f;
+                if (height > image.height * 0.9) {
+                    height = height * f;
+                    width = width * f;
+                }
+            }
+        }
+        const x1 = width * 0.1;
+        const y1 = height * 0.1;
+        let x2 = width * 0.9;
+        let y2 = height * 0.9;
+
         setStartPoint({
-            x: image.width * 0.1,
-            y: image.height * 0.1,
+            x: x1,
+            y: y1,
         });
         setEndPoint({
-            x: image.width * 0.9,
-            y: image.height * 0.9,
+            x: x2,
+            y: y2,
         });
-        area.current = {
-            x1: image.width * 0.1,
-            y1: image.height * 0.1,
-            x2: image.width * 0.9,
-            y2: image.height * 0.9,
-        };
+        area.current = { x1, y1, x2, y2 };
+    }, [
+        image.width,
+        image.height,
+        aspectRatio.force,
+        aspectRatio.widthComponent,
+        aspectRatio.heightComponent,
+    ]);
+
+    const handleResetPoints = useCallback(() => {
+        setupInitialCropArea();
         renderBackdrop();
         setOpen(false);
         setAspectRatio({
@@ -130,6 +160,10 @@ const CroppingTool = ({ image, onSave }: Props) => {
         overlayCtx.fillRect(0, 0, w, h);
         overlayCtx.clearRect(x1, y1, x2 - x1, y2 - y1);
     }, []);
+
+    useEffect(() => {
+        setupInitialCropArea();
+    }, [setupInitialCropArea]);
 
     useEffect(() => {
         const listeners: {
@@ -229,7 +263,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
 
                         const dx = e.movementX * scaleX;
                         const dy = e.movementY * scaleY;
-                        // todo - support for forced aspect ratio
+
                         const old = {
                             ...area.current,
                         };
@@ -654,24 +688,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
                                 variant="surface"
                                 size="xs"
                                 disabled={!startPoint && !endPoint}
-                                onClick={() => {
-                                    setStartPoint({
-                                        x: image.width * 0.1,
-                                        y: image.height * 0.1,
-                                    });
-                                    setEndPoint({
-                                        x: image.width * 0.9,
-                                        y: image.height * 0.9,
-                                    });
-                                    area.current = {
-                                        x1: image.width * 0.1,
-                                        y1: image.height * 0.1,
-                                        x2: image.width * 0.9,
-                                        y2: image.height * 0.9,
-                                    };
-                                    renderBackdrop();
-                                    // todo - shouldn't it be replaced with handleResetPoints?
-                                }}
+                                onClick={handleResetPoints}
                             >
                                 Reset points
                             </Button>
