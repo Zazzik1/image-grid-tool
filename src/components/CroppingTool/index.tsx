@@ -3,13 +3,14 @@ import {
     Button,
     CloseButton,
     Dialog,
-    Checkbox,
     Portal,
     NumberInput,
     HStack,
     Heading,
     Text,
     Box,
+    RadioCard,
+    Stack,
 } from '@chakra-ui/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FaCropSimple } from 'react-icons/fa6';
@@ -26,10 +27,72 @@ type Props = {
     onSave: (image: HTMLImageElement) => void;
 };
 
+const availableRatios = [
+    {
+        value: 'free',
+        widthComponent: 1,
+        heightComponent: 1,
+        force: false,
+    },
+    {
+        value: '1:1',
+        widthComponent: 1,
+        heightComponent: 1,
+        force: true,
+    },
+    {
+        value: '3:2',
+        widthComponent: 3,
+        heightComponent: 2,
+        force: true,
+    },
+    {
+        value: '4:3',
+        widthComponent: 4,
+        heightComponent: 3,
+        force: true,
+    },
+    {
+        value: '5:4',
+        widthComponent: 5,
+        heightComponent: 4,
+        force: true,
+    },
+    {
+        value: '16:9',
+        widthComponent: 16,
+        heightComponent: 9,
+        force: true,
+    },
+    {
+        value: 'custom',
+        widthComponent: 1,
+        heightComponent: 1,
+        force: true,
+    },
+] as const;
+
+type AvailableRatio = (typeof availableRatios)[number]['value'];
+
+const orientations = [
+    {
+        value: 'horizontal',
+        title: 'Horizontal',
+    },
+    {
+        value: 'vertical',
+        title: 'Vertical',
+    },
+] as const;
+
+type Orientation = (typeof orientations)[number]['value'];
+
 const CroppingTool = ({ image, onSave }: Props) => {
     const bodyRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const canvasOverlayRef = useRef<HTMLCanvasElement | null>(null);
+    const [ratioOption, setRatioOption] = useState<AvailableRatio>('1:1');
+    const [orientation, setOrientation] = useState<Orientation>('horizontal');
     const [open, setOpen] = useState(false);
     const [startPoint, setStartPoint] = useState<{
         x: number;
@@ -118,6 +181,8 @@ const CroppingTool = ({ image, onSave }: Props) => {
             heightComponent: 1,
             widthComponent: 1,
         });
+        setOrientation('horizontal');
+        setRatioOption('1:1');
     }, [image]);
 
     const handleClose = useCallback(() => {
@@ -585,96 +650,252 @@ const CroppingTool = ({ image, onSave }: Props) => {
                         <Dialog.Header>
                             <Dialog.Title>Crop the image </Dialog.Title>
                         </Dialog.Header>
-                        <Dialog.Body ref={bodyRef}>
-                            <div
-                                style={{
-                                    position: 'relative',
-                                }}
-                            >
-                                <canvas ref={canvasRef} />
-                                <CropAreaBoundary {...cropAreaProps} />
-                                <CropAreaGrid {...cropAreaProps} />
-                                <canvas
-                                    ref={canvasOverlayRef}
-                                    style={{ cursor }}
-                                />
-                                <CropAreaHandles {...cropAreaProps} />
+                        <Dialog.Body
+                            ref={bodyRef}
+                            style={{
+                                display: 'flex',
+                                gap: '16px',
+                                flexWrap: 'wrap',
+                            }}
+                        >
+                            <div>
+                                <Heading size="lg" marginBottom="8px">
+                                    Settings
+                                </Heading>
+                                <RadioCard.Root
+                                    value={orientation}
+                                    onValueChange={(e) => {
+                                        const orientation =
+                                            e.value as Orientation;
+                                        setOrientation(e.value as Orientation);
+
+                                        const ratio = availableRatios.find(
+                                            (r) => r.value === ratioOption
+                                        );
+                                        if (!ratio) return;
+                                        if (orientation === 'horizontal') {
+                                            setAspectRatio({
+                                                force: ratio.force,
+                                                heightComponent:
+                                                    ratio.heightComponent,
+                                                widthComponent:
+                                                    ratio.widthComponent,
+                                            });
+                                        } else {
+                                            setAspectRatio({
+                                                force: ratio.force,
+                                                heightComponent:
+                                                    ratio.widthComponent,
+                                                widthComponent:
+                                                    ratio.heightComponent,
+                                            });
+                                        }
+                                    }}
+                                    disabled={
+                                        ratioOption === 'free' ||
+                                        ratioOption === '1:1'
+                                    }
+                                >
+                                    <RadioCard.Label>
+                                        Select orientation
+                                    </RadioCard.Label>
+                                    <Stack align="stretch">
+                                        {orientations.map((item) => (
+                                            <RadioCard.Item
+                                                key={item.value}
+                                                value={item.value}
+                                            >
+                                                <RadioCard.ItemHiddenInput />
+                                                <RadioCard.ItemControl>
+                                                    <RadioCard.ItemText>
+                                                        {item.title}
+                                                    </RadioCard.ItemText>
+                                                    <RadioCard.ItemIndicator />
+                                                </RadioCard.ItemControl>
+                                            </RadioCard.Item>
+                                        ))}
+                                    </Stack>
+                                </RadioCard.Root>
+                                <br />
+                                <RadioCard.Root
+                                    value={ratioOption}
+                                    onValueChange={(e) => {
+                                        const ratio = availableRatios.find(
+                                            (r) =>
+                                                r.value ===
+                                                (e.value as AvailableRatio)
+                                        );
+                                        if (!ratio) return;
+
+                                        if (orientation === 'horizontal') {
+                                            setAspectRatio({
+                                                force: ratio.force,
+                                                heightComponent:
+                                                    ratio.heightComponent,
+                                                widthComponent:
+                                                    ratio.widthComponent,
+                                            });
+                                        } else {
+                                            setAspectRatio({
+                                                force: ratio.force,
+                                                heightComponent:
+                                                    ratio.widthComponent,
+                                                widthComponent:
+                                                    ratio.heightComponent,
+                                            });
+                                        }
+                                        setRatioOption(
+                                            e.value as AvailableRatio
+                                        );
+                                    }}
+                                >
+                                    <RadioCard.Label>
+                                        Select aspect ratio
+                                    </RadioCard.Label>
+                                    <Stack align="stretch" width="240px">
+                                        {availableRatios.map((item) => (
+                                            <RadioCard.Item
+                                                key={item.value}
+                                                value={item.value}
+                                            >
+                                                <RadioCard.ItemHiddenInput />
+                                                <RadioCard.ItemControl>
+                                                    <RadioCard.ItemText>
+                                                        {item.value ===
+                                                            'free' ||
+                                                        item.value ===
+                                                            'custom' ? (
+                                                            <>{item.value}</>
+                                                        ) : (
+                                                            <>
+                                                                {orientation ===
+                                                                'horizontal'
+                                                                    ? `${item.widthComponent}:${item.heightComponent}`
+                                                                    : `${item.heightComponent}:${item.widthComponent}`}
+                                                            </>
+                                                        )}
+                                                    </RadioCard.ItemText>
+                                                    <RadioCard.ItemIndicator />
+                                                </RadioCard.ItemControl>
+                                            </RadioCard.Item>
+                                        ))}
+                                    </Stack>
+                                </RadioCard.Root>
+                                <HStack marginTop={2} gap={3}>
+                                    <NumberInput.Root
+                                        size="sm"
+                                        maxW="60px"
+                                        disabled={!aspectRatio.force}
+                                        value={aspectRatio.widthComponent.toString()}
+                                        min={1}
+                                        onValueChange={(e: {
+                                            valueAsNumber: number;
+                                        }) => {
+                                            const value = e.valueAsNumber;
+                                            if (
+                                                value >
+                                                aspectRatio.heightComponent
+                                            ) {
+                                                setOrientation('vertical');
+                                                setRatioOption('custom');
+                                            } else if (
+                                                value <
+                                                aspectRatio.heightComponent
+                                            ) {
+                                                setOrientation('horizontal');
+                                                setRatioOption('custom');
+                                            } else {
+                                                setRatioOption('1:1');
+                                            }
+                                            if (
+                                                Number.isNaN(value) ||
+                                                value < 0
+                                            )
+                                                return setAspectRatio(
+                                                    (old) => ({
+                                                        ...old,
+                                                        widthComponent: 1,
+                                                    })
+                                                );
+                                            return setAspectRatio((old) => ({
+                                                ...old,
+                                                widthComponent: value,
+                                            }));
+                                        }}
+                                    >
+                                        <NumberInput.Control />
+                                        <NumberInput.Input
+                                            backgroundColor={COLOR.BG}
+                                        />
+                                    </NumberInput.Root>
+                                    <Text fontSize="lg">:</Text>
+                                    <NumberInput.Root
+                                        size="sm"
+                                        maxW="60px"
+                                        disabled={!aspectRatio.force}
+                                        value={aspectRatio.heightComponent.toString()}
+                                        min={1}
+                                        onValueChange={(e: {
+                                            valueAsNumber: number;
+                                        }) => {
+                                            const value = e.valueAsNumber;
+                                            if (
+                                                value <
+                                                aspectRatio.widthComponent
+                                            ) {
+                                                setOrientation('vertical');
+                                                setRatioOption('custom');
+                                            } else if (
+                                                value >
+                                                aspectRatio.widthComponent
+                                            ) {
+                                                setOrientation('horizontal');
+                                                setRatioOption('custom');
+                                            } else {
+                                                setRatioOption('1:1');
+                                            }
+                                            if (
+                                                Number.isNaN(value) ||
+                                                value < 0
+                                            )
+                                                return setAspectRatio(
+                                                    (old) => ({
+                                                        ...old,
+                                                        heightComponent: 1,
+                                                    })
+                                                );
+                                            return setAspectRatio((old) => ({
+                                                ...old,
+                                                heightComponent: value,
+                                            }));
+                                        }}
+                                    >
+                                        <NumberInput.Control />
+                                        <NumberInput.Input
+                                            backgroundColor={COLOR.BG}
+                                        />
+                                    </NumberInput.Root>
+                                </HStack>
                             </div>
-                            <br />
-                            <Heading size="lg">Aspect ratio</Heading>
-                            <HStack marginTop={2} gap={3}>
-                                <NumberInput.Root
-                                    size="sm"
-                                    maxW="60px"
-                                    disabled={!aspectRatio.force}
-                                    value={aspectRatio.widthComponent.toString()}
-                                    min={1}
-                                    onValueChange={(e: {
-                                        valueAsNumber: number;
-                                    }) => {
-                                        const value = e.valueAsNumber;
-                                        if (Number.isNaN(value) || value < 0)
-                                            return setAspectRatio((old) => ({
-                                                ...old,
-                                                widthComponent: 1,
-                                            }));
-                                        return setAspectRatio((old) => ({
-                                            ...old,
-                                            widthComponent: value,
-                                        }));
+                            <div>
+                                <Heading size="lg" marginBottom="8px">
+                                    Preview
+                                </Heading>
+                                <div
+                                    style={{
+                                        position: 'relative',
                                     }}
                                 >
-                                    <NumberInput.Control />
-                                    <NumberInput.Input
-                                        backgroundColor={COLOR.BG}
+                                    <canvas ref={canvasRef} />
+                                    <CropAreaBoundary {...cropAreaProps} />
+                                    <CropAreaGrid {...cropAreaProps} />
+                                    <canvas
+                                        ref={canvasOverlayRef}
+                                        style={{ cursor }}
                                     />
-                                </NumberInput.Root>
-                                <Text fontSize="lg">:</Text>
-                                <NumberInput.Root
-                                    size="sm"
-                                    maxW="60px"
-                                    disabled={!aspectRatio.force}
-                                    value={aspectRatio.heightComponent.toString()}
-                                    min={1}
-                                    onValueChange={(e: {
-                                        valueAsNumber: number;
-                                    }) => {
-                                        const value = e.valueAsNumber;
-                                        if (Number.isNaN(value) || value < 0)
-                                            return setAspectRatio((old) => ({
-                                                ...old,
-                                                heightComponent: 1,
-                                            }));
-                                        return setAspectRatio((old) => ({
-                                            ...old,
-                                            heightComponent: value,
-                                        }));
-                                    }}
-                                >
-                                    <NumberInput.Control />
-                                    <NumberInput.Input
-                                        backgroundColor={COLOR.BG}
-                                    />
-                                </NumberInput.Root>
-                            </HStack>
-                            <br />
-                            <Checkbox.Root
-                                size="sm"
-                                checked={aspectRatio.force}
-                                onCheckedChange={(e) =>
-                                    setAspectRatio((old) => ({
-                                        ...old,
-                                        force: !!e.checked,
-                                    }))
-                                }
-                            >
-                                <Checkbox.HiddenInput />
-                                <Checkbox.Control />
-                                <Checkbox.Label>
-                                    Lock while resizing
-                                </Checkbox.Label>
-                            </Checkbox.Root>
-                            <br />
+                                    <CropAreaHandles {...cropAreaProps} />
+                                </div>
+                            </div>
                         </Dialog.Body>
                         <Dialog.Footer>
                             <HStack justifyContent="space-between" width="100%">
