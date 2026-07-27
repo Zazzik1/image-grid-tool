@@ -1,3 +1,5 @@
+/// <reference types="vitest/config" />
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
@@ -16,5 +18,11 @@ export default defineConfig({
     },
     define: {
         __COMMIT_HASH__: JSON.stringify(commitHash),
+    },
+
+    test: {
+        environment: 'jsdom',
+        globals: true,
+        setupFiles: './src/__tests__/setup.ts',
     },
 });

@@ -37,14 +37,14 @@ describe('getAspectRatio', () => {
             factorFound,
         ]) => {
             expect(
-                getAspectRatio(width as number, height as number),
+                getAspectRatio(width as number, height as number)
             ).toStrictEqual<Result>({
                 factorFound: factorFound as boolean,
                 label: `${expectedWidthComponent}:${expectedHeightComponent}`,
                 widthComponent: expectedWidthComponent as number,
                 heightComponent: expectedHeightComponent as number,
             });
-        },
+        }
     );
     it('prime:prime -> finds a close aspect ratio', () => {
         const primeA = 20 ** 2 - 1;
@@ -53,7 +53,7 @@ describe('getAspectRatio', () => {
         expect(result.factorFound).toBe(true);
         expect(result.label).toBe('4:9');
         expect(
-            (result.widthComponent / result.heightComponent).toFixed(2),
+            (result.widthComponent / result.heightComponent).toFixed(2)
         ).toBe((primeA / primeB).toFixed(2));
     });
 });
@@ -78,14 +78,14 @@ describe('getGridSuggestion', () => {
             expect(getGridSuggestion(img)).toStrictEqual<GridSuggestion>({
                 aspectRatio: getAspectRatio(
                     img.naturalWidth,
-                    img.naturalHeight,
+                    img.naturalHeight
                 ),
                 grid: {
                     rows: expectedRows as number,
                     columns: expectedColumns as number,
                 },
             });
-        },
+        }
     );
 });
 
@@ -98,7 +98,7 @@ describe('getLineThicknessSuggestion', () => {
         [2001, 100, 3],
     ])('%i:%i -> %ipx', ([width, height, expectedLineThickness]) => {
         expect(getLineThicknessSuggestion(width, height)).toBe(
-            expectedLineThickness,
+            expectedLineThickness
         );
     });
 });
@@ -150,6 +150,7 @@ describe('thresholdImage', () => {
             0, 0, 0, 255,
         ]);
 
-        expect(result.data).toEqual(expected);
+        // ...x - workaround for test issue (mixed ImageData implementations jsdom vs canvas)
+        expect([...result.data]).toEqual([...expected]);
     });
 });

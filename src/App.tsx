@@ -16,6 +16,7 @@ import {
     Link,
     NumberInput,
     parseColor,
+    RadioCard,
     Separator,
     Spinner,
     Stack,
@@ -49,6 +50,7 @@ import { GoTrash } from 'react-icons/go';
 import TresholdingTool from './components/TresholdingTool';
 import LogTransformTool from './components/LogTransformTool';
 import HSLTool from './components/HSLTool';
+import useHistory from './hooks/useOperationsHistory';
 
 const HEADER_HEIGHT = 86;
 
@@ -59,7 +61,6 @@ function App() {
     const [color, setColor] = useState(COLOR.FG2);
     const [diagonals, setDiagonals] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [image, setImage] = useState<HTMLImageElement | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [shouldShowCellIds, setShouldShowCellIds] = useState<boolean>(false);
     const [aspectRatio, setAspectRatio] = useState<ReturnType<
@@ -67,6 +68,9 @@ function App() {
     > | null>(null);
     const [filename, setFilename] = useState('');
     const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    const history = useHistory();
+    const image = history.snapshot?.image;
 
     const handleDownload = useCallback(() => {
         if (!canvasRef.current) return;
@@ -94,28 +98,28 @@ function App() {
         if (!image) return;
         setIsLoading(true);
         rotateImage(image, -90).then((img) => {
-            setImage(img);
+            history.add('Rotate counterclockwise', img);
             suggestGrids(img);
         });
-    }, [image, suggestGrids]);
+    }, [image, suggestGrids, history]);
 
     const handleTurnRight = useCallback(() => {
         if (!image) return;
         setIsLoading(true);
         rotateImage(image, 90).then((img) => {
-            setImage(img);
+            history.add('Rotate clockwise', img);
             suggestGrids(img);
         });
-    }, [image, suggestGrids]);
+    }, [image, suggestGrids, history]);
 
-    const handleImageUpdate = useCallback(
-        (image: HTMLImageElement) => {
-            setImage(image);
+    const handleToolSave = useCallback(
+        (image: HTMLImageElement, toolName: string) => {
+            history.add(toolName, image);
             setAspectRatio(getAspectRatio(image.width, image.height));
             suggestGrids(image);
             setIsLoading(true);
         },
-        [suggestGrids]
+        [suggestGrids, history]
     );
 
     useEffect(() => {
@@ -283,7 +287,8 @@ function App() {
 
                 const img = new Image();
                 img.onload = () => {
-                    setImage(img);
+                    history.clear();
+                    history.add('Load image', img);
                     suggestGrids(img);
                     setIsLoading(false);
                 };
@@ -295,23 +300,31 @@ function App() {
             };
             reader.readAsDataURL(file);
         },
-        [suggestGrids]
+        [suggestGrids, history]
     );
+
     const handleReflectVertically = useCallback<() => void>(() => {
         if (!image) return;
         setIsLoading(true);
-        mirrorImageVertically(image).then(setImage);
-    }, [image]);
+        mirrorImageVertically(image).then((image) =>
+            handleToolSave(image, 'Reflect vertically')
+        );
+    }, [image, handleToolSave]);
+
     const handleReflectHorizontally = useCallback<() => void>(() => {
         if (!image) return;
         setIsLoading(true);
-        mirrorImageHorizontally(image).then(setImage);
-    }, [image]);
+        mirrorImageHorizontally(image).then((image) =>
+            handleToolSave(image, 'Reflect horizontally')
+        );
+    }, [image, handleToolSave]);
+
     const handleFilenameChange = useCallback<
         React.ChangeEventHandler<HTMLInputElement>
     >((e) => {
         setFilename(e.target.value);
     }, []);
+
     return (
         <Box
             display="flex"
@@ -481,7 +494,9 @@ function App() {
                             <HStack>
                                 <CroppingTool
                                     image={image}
-                                    onSave={handleImageUpdate}
+                                    onSave={(image) =>
+                                        handleToolSave(image, 'Crop')
+                                    }
                                 />
                                 <Tooltip content="Rotate counterclockwise">
                                     <IconButton
@@ -527,7 +542,7 @@ function App() {
                                     <IconButton
                                         variant="surface"
                                         size="sm"
-                                        onClick={() => setImage(null)}
+                                        onClick={history.clear}
                                         data-test-name="delete-image"
                                     >
                                         <GoTrash />
@@ -537,15 +552,24 @@ function App() {
                             <HStack>
                                 <TresholdingTool
                                     image={image}
-                                    onSave={handleImageUpdate}
+                                    onSave={(image) =>
+                                        handleToolSave(image, 'Tresholding')
+                                    }
                                 />
                                 <LogTransformTool
                                     image={image}
-                                    onSave={handleImageUpdate}
+                                    onSave={(image) =>
+                                        handleToolSave(
+                                            image,
+                                            'Complex transform'
+                                        )
+                                    }
                                 />
                                 <HSLTool
                                     image={image}
-                                    onSave={handleImageUpdate}
+                                    onSave={(image) =>
+                                        handleToolSave(image, 'HSL tool')
+                                    }
                                 />
                             </HStack>
 
@@ -790,6 +814,47 @@ function App() {
                             </HStack>
                         </ColorPicker.Content>
                     </ColorPicker.Root>
+                    {!!history.history.length && (
+                        <>
+                            <Separator margin="8px 0" />
+                            <Heading size="md" color={COLOR.TEXT2}>
+                                History
+                            </Heading>
+                            <RadioCard.Root
+                                size="sm"
+                                value={history.index + ''}
+                                onValueChange={(e) => {
+                                    const value = e.value;
+                                    if (!value) return;
+                                    history.setIndex(+value);
+                                    const snapshot = history.history[+value];
+                                    if (snapshot) suggestGrids(snapshot.image);
+                                }}
+                            >
+                                <Stack align="stretch">
+                                    {history.history.map((item, index) => (
+                                        <RadioCard.Item
+                                            key={index}
+                                            value={index + ''}
+                                        >
+                                            <RadioCard.ItemHiddenInput />
+                                            <RadioCard.ItemControl>
+                                                <RadioCard.ItemText>
+                                                    {item.toolName}
+                                                </RadioCard.ItemText>
+                                                <RadioCard.ItemDescription>
+                                                    {item.date.toLocaleTimeString(
+                                                        'en-GB'
+                                                    )}
+                                                </RadioCard.ItemDescription>
+                                                <RadioCard.ItemIndicator />
+                                            </RadioCard.ItemControl>
+                                        </RadioCard.Item>
+                                    ))}
+                                </Stack>
+                            </RadioCard.Root>
+                        </>
+                    )}
                 </Stack>
                 <HStack position="fixed" bottom="0" right="14px" zIndex={2}>
                     <Text fontSize="0.8em" color="rgba(255, 255, 255, 0.5)">
