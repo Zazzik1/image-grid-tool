@@ -99,8 +99,8 @@ const CroppingTool = ({ image, onSave }: Props) => {
         }
         const x1 = width * 0.1;
         const y1 = height * 0.1;
-        let x2 = width * 0.9;
-        let y2 = height * 0.9;
+        const x2 = width * 0.9;
+        const y2 = height * 0.9;
 
         setStartPoint({
             x: x1,
@@ -119,6 +119,22 @@ const CroppingTool = ({ image, onSave }: Props) => {
         aspectRatio.heightComponent,
     ]);
 
+    const renderBackdrop = useCallback(() => {
+        const canvasOverlay = canvasOverlayRef.current;
+        if (!canvasOverlay) return;
+        const overlayCtx = canvasOverlay.getContext('2d');
+        if (!overlayCtx) return;
+
+        const w = canvasOverlay.width;
+        const h = canvasOverlay.height;
+        const { x1, x2, y1, y2 } = area.current;
+
+        overlayCtx.clearRect(0, 0, w, h);
+        overlayCtx.fillStyle = '#0000006e';
+        overlayCtx.fillRect(0, 0, w, h);
+        overlayCtx.clearRect(x1, y1, x2 - x1, y2 - y1);
+    }, []);
+
     const handleResetPoints = useCallback(() => {
         setupInitialCropArea();
         renderBackdrop();
@@ -129,7 +145,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
         });
         setOrientation('horizontal');
         setRatioOption('1:1');
-    }, [image]);
+    }, [renderBackdrop, setupInitialCropArea]);
 
     const handleClose = useCallback(() => {
         handleResetPoints();
@@ -161,22 +177,6 @@ const CroppingTool = ({ image, onSave }: Props) => {
         tempCtx.putImageData(imageData, 0, 0);
         img.src = tempCanvas.toDataURL();
     }, [onSave, image, startPoint, endPoint, handleClose]);
-
-    const renderBackdrop = useCallback(() => {
-        const canvasOverlay = canvasOverlayRef.current;
-        if (!canvasOverlay) return;
-        const overlayCtx = canvasOverlay.getContext('2d');
-        if (!overlayCtx) return;
-
-        const w = canvasOverlay.width;
-        const h = canvasOverlay.height;
-        const { x1, x2, y1, y2 } = area.current;
-
-        overlayCtx.clearRect(0, 0, w, h);
-        overlayCtx.fillStyle = '#0000006e';
-        overlayCtx.fillRect(0, 0, w, h);
-        overlayCtx.clearRect(x1, y1, x2 - x1, y2 - y1);
-    }, []);
 
     useEffect(() => {
         setupInitialCropArea();
@@ -564,6 +564,7 @@ const CroppingTool = ({ image, onSave }: Props) => {
         aspectRatio.force,
         aspectRatio.widthComponent,
         aspectRatio.heightComponent,
+        renderBackdrop,
     ]);
     const perceivedImageWidth =
         (image.naturalWidth / image.naturalHeight) * CANVAS_HEIGHT;

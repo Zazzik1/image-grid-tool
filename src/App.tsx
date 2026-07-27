@@ -98,28 +98,28 @@ function App() {
         if (!image) return;
         setIsLoading(true);
         rotateImage(image, -90).then((img) => {
-            history.append('Rotate counterclockwise', img);
+            history.add('Rotate counterclockwise', img);
             suggestGrids(img);
         });
-    }, [image, suggestGrids, history.append]);
+    }, [image, suggestGrids, history]);
 
     const handleTurnRight = useCallback(() => {
         if (!image) return;
         setIsLoading(true);
         rotateImage(image, 90).then((img) => {
-            history.append('Rotate clockwise', img);
+            history.add('Rotate clockwise', img);
             suggestGrids(img);
         });
-    }, [image, suggestGrids, history.append]);
+    }, [image, suggestGrids, history]);
 
     const handleToolSave = useCallback(
         (image: HTMLImageElement, toolName: string) => {
-            history.append(toolName, image);
+            history.add(toolName, image);
             setAspectRatio(getAspectRatio(image.width, image.height));
             suggestGrids(image);
             setIsLoading(true);
         },
-        [suggestGrids, history.append]
+        [suggestGrids, history]
     );
 
     useEffect(() => {
@@ -288,7 +288,7 @@ function App() {
                 const img = new Image();
                 img.onload = () => {
                     history.clear();
-                    history.append('Load image', img);
+                    history.add('Load image', img);
                     suggestGrids(img);
                     setIsLoading(false);
                 };
@@ -300,27 +300,31 @@ function App() {
             };
             reader.readAsDataURL(file);
         },
-        [suggestGrids, history.append]
+        [suggestGrids, history]
     );
+
     const handleReflectVertically = useCallback<() => void>(() => {
         if (!image) return;
         setIsLoading(true);
         mirrorImageVertically(image).then((image) =>
             handleToolSave(image, 'Reflect vertically')
         );
-    }, [image]);
+    }, [image, handleToolSave]);
+
     const handleReflectHorizontally = useCallback<() => void>(() => {
         if (!image) return;
         setIsLoading(true);
         mirrorImageHorizontally(image).then((image) =>
             handleToolSave(image, 'Reflect horizontally')
         );
-    }, [image]);
+    }, [image, handleToolSave]);
+
     const handleFilenameChange = useCallback<
         React.ChangeEventHandler<HTMLInputElement>
     >((e) => {
         setFilename(e.target.value);
     }, []);
+
     return (
         <Box
             display="flex"

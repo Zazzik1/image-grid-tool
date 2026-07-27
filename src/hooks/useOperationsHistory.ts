@@ -6,43 +6,61 @@ type Snapshot = {
     date: Date;
 };
 
-// TODO - fix lint in IDE to show missing vars in dependency arrays
+type State = {
+    index: number;
+    history: Snapshot[];
+};
 
-// TODO - cover with tests!
 const useOperationsHistory = () => {
-    const [history, setHistory] = useState<Snapshot[]>([]);
-    const [index, setIndex] = useState<number>(0);
+    const [state, setState] = useState<State>({
+        index: 0,
+        history: [],
+    });
 
-    const append = useCallback((toolName: string, image: HTMLImageElement) => {
-        setHistory((history) => {
-            setIndex((index) => {
-                if (!history.length) return 0;
-                return index + 1; // TODO - it will not be true if index is not the last item!!!
+    const setIndex = useCallback((index: number) => {
+        setState((old) => ({ ...old, index }));
+    }, []);
+
+    const add = useCallback((toolName: string, image: HTMLImageElement) => {
+        setState((old) => {
+            // everything after index gets removed
+            const index = old.history.length === 0 ? 0 : old.index + 1;
+            const history = old.history.slice(0, index);
+            history.push({
+                toolName,
+                image,
+                date: new Date(),
             });
-            return [
-                ...history,
-                {
-                    toolName,
-                    image,
-                    date: new Date(),
-                },
-            ];
+            return {
+                ...old,
+                index,
+                history,
+            };
         });
     }, []);
 
     const clear = useCallback(() => {
-        setHistory(() => []);
-        setIndex(() => 0);
+        setState(() => ({
+            history: [],
+            index: 0,
+        }));
     }, []);
 
     const undo = useCallback(() => {
-        setIndex((old) => Math.max(0, old - 1));
+        setState((old) => ({
+            ...old,
+            index: Math.max(0, old.index - 1),
+        }));
     }, []);
 
     const redo = useCallback(() => {
-        setIndex((old) => Math.min(old + 1, history.length - 1));
-    }, [history.length]);
+        setState((old) => ({
+            ...old,
+            index: Math.min(old.index + 1, old.history.length - 1),
+        }));
+    }, []);
 
+    const { history, index } = state;
     const snapshot: Snapshot | null = history[index];
 
     useEffect(() => {
@@ -63,7 +81,7 @@ const useOperationsHistory = () => {
 
     return {
         clear,
-        append,
+        add,
         undo,
         redo,
         index,
