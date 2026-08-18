@@ -4,11 +4,15 @@ import useOperationsHistory from '@/hooks/useOperationsHistory';
 
 describe('useOperationsHistory', () => {
     test('history is empty by default', () => {
-        const { result } = renderHook(() => useOperationsHistory());
+        const { result } = renderHook(() =>
+            useOperationsHistory({ postKeydownAction: () => {} })
+        );
         expect(result.current.history.length).toBe(0);
     });
     test('undo works as expected', () => {
-        const { result } = renderHook(() => useOperationsHistory());
+        const { result } = renderHook(() =>
+            useOperationsHistory({ postKeydownAction: () => {} })
+        );
         const img = new Image();
 
         act(() => {
@@ -28,7 +32,9 @@ describe('useOperationsHistory', () => {
         expect(result.current.snapshot.toolName).toBe('load image');
     });
     test('redo works as expected', () => {
-        const { result } = renderHook(() => useOperationsHistory());
+        const { result } = renderHook(() =>
+            useOperationsHistory({ postKeydownAction: () => {} })
+        );
         const img = new Image();
 
         act(() => {
@@ -51,7 +57,9 @@ describe('useOperationsHistory', () => {
         expect(result.current.snapshot.toolName).toBe('do nothing');
     });
     test('clear works as expected', () => {
-        const { result } = renderHook(() => useOperationsHistory());
+        const { result } = renderHook(() =>
+            useOperationsHistory({ postKeydownAction: () => {} })
+        );
         const img = new Image();
         act(() => {
             result.current.add('load image', img);
@@ -66,7 +74,9 @@ describe('useOperationsHistory', () => {
         expect(result.current.snapshot).toBe(undefined);
     });
     test('add adds new entry', () => {
-        const { result } = renderHook(() => useOperationsHistory());
+        const { result } = renderHook(() =>
+            useOperationsHistory({ postKeydownAction: () => {} })
+        );
         expect(result.current.index).toBe(0);
         const catA = new Image();
         const catB = new Image();
@@ -93,7 +103,9 @@ describe('useOperationsHistory', () => {
         expect(result.current.index).toBe(2);
     });
     test('add adds new entry when index is not the last available index', () => {
-        const { result } = renderHook(() => useOperationsHistory());
+        const { result } = renderHook(() =>
+            useOperationsHistory({ postKeydownAction: () => {} })
+        );
         const catA = new Image();
         const catB = new Image();
         const catC = new Image();

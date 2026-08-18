@@ -69,9 +69,6 @@ function App() {
     const [filename, setFilename] = useState('');
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    const history = useHistory();
-    const image = history.snapshot?.image;
-
     const handleDownload = useCallback(() => {
         if (!canvasRef.current) return;
         const link = document.createElement('a');
@@ -93,6 +90,11 @@ function App() {
         setRows(rows);
         setColumns(columns);
     }, []);
+
+    const history = useHistory({
+        postKeydownAction: (snapshot) => suggestGrids(snapshot.image),
+    });
+    const image = history.snapshot?.image;
 
     const handleTurnLeft = useCallback(() => {
         if (!image) return;
