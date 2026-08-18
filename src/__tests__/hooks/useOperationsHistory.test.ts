@@ -1,6 +1,6 @@
-import { describe, expect, test } from 'vitest';
+import { vi, describe, expect, test } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import useOperationsHistory from '@/hooks/useOperationsHistory';
+import useOperationsHistory, { Snapshot } from '@/hooks/useOperationsHistory';
 
 describe('useOperationsHistory', () => {
     test('history is empty by default', () => {
@@ -56,6 +56,118 @@ describe('useOperationsHistory', () => {
         });
         expect(result.current.snapshot.toolName).toBe('do nothing');
     });
+    test('undo returns a previous snapshot', () => {
+        const { result } = renderHook(() =>
+            useOperationsHistory({ postKeydownAction: () => {} })
+        );
+
+        const imgA = new Image();
+        const imgB = new Image();
+
+        act(() => {
+            result.current.add('load image', imgA);
+            result.current.add('do nothing', imgB);
+        });
+
+        let snapshot: Snapshot | undefined;
+
+        act(() => {
+            snapshot = result.current.undo();
+        });
+
+        expect(snapshot?.image).toEqual(imgA);
+        expect(snapshot?.toolName).toBe('load image');
+    });
+
+    test('redo returns the next snapshot', () => {
+        const { result } = renderHook(() =>
+            useOperationsHistory({ postKeydownAction: () => {} })
+        );
+
+        const imgA = new Image();
+        const imgB = new Image();
+
+        act(() => {
+            result.current.add('load image', imgA);
+            result.current.add('do nothing', imgB);
+            result.current.setIndex(0);
+        });
+
+        let snapshot: Snapshot | undefined;
+
+        act(() => {
+            snapshot = result.current.redo();
+        });
+
+        expect(snapshot?.image).toEqual(imgB);
+        expect(snapshot?.toolName).toBe('do nothing');
+    });
+
+    test('ctrl+z calls undo and postKeydownAction', () => {
+        const postKeydownAction = vi.fn();
+
+        const { result } = renderHook(() =>
+            useOperationsHistory({ postKeydownAction })
+        );
+
+        const img = new Image();
+
+        act(() => {
+            result.current.add('load image', img);
+            result.current.add('do nothing', img);
+        });
+
+        act(() => {
+            document.dispatchEvent(
+                new KeyboardEvent('keydown', {
+                    key: 'z',
+                    ctrlKey: true,
+                })
+            );
+        });
+
+        expect(postKeydownAction).toHaveBeenCalledTimes(1);
+        expect(postKeydownAction).toHaveBeenCalledWith(
+            expect.objectContaining({
+                toolName: 'load image',
+                image: img,
+            })
+        );
+    });
+
+    test('ctrl+y calls redo and postKeydownAction', () => {
+        const postKeydownAction = vi.fn();
+
+        const { result } = renderHook(() =>
+            useOperationsHistory({ postKeydownAction })
+        );
+
+        const img = new Image();
+
+        act(() => {
+            result.current.add('load image', img);
+            result.current.add('do nothing', img);
+            result.current.setIndex(0);
+        });
+
+        act(() => {
+            document.dispatchEvent(
+                new KeyboardEvent('keydown', {
+                    key: 'y',
+                    ctrlKey: true,
+                })
+            );
+        });
+
+        expect(postKeydownAction).toHaveBeenCalledTimes(1);
+        expect(postKeydownAction).toHaveBeenCalledWith(
+            expect.objectContaining({
+                toolName: 'do nothing',
+                image: img,
+            })
+        );
+    });
+
     test('clear works as expected', () => {
         const { result } = renderHook(() =>
             useOperationsHistory({ postKeydownAction: () => {} })

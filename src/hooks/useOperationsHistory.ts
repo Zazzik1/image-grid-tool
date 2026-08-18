@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-type Snapshot = {
+export type Snapshot = {
     toolName: string;
     image: HTMLImageElement;
     date: Date;
@@ -51,28 +51,26 @@ const useOperationsHistory = ({ postKeydownAction }: Props) => {
     }, []);
 
     const undo = useCallback(() => {
-        let index: number = 0;
-        setState((old) => {
-            index = Math.max(0, old.index - 1);
-            return {
-                ...old,
-                index,
-            };
-        });
+        const index = Math.max(0, state.index - 1);
+
+        setState((old) => ({
+            ...old,
+            index,
+        }));
+
         return state.history[index];
-    }, [state.history]);
+    }, [state.index, state.history]);
 
     const redo = useCallback(() => {
-        let index: number = 0;
-        setState((old) => {
-            index = Math.min(old.index + 1, old.history.length - 1);
-            return {
-                ...old,
-                index,
-            };
-        });
+        const index = Math.min(state.index + 1, state.history.length - 1);
+
+        setState((old) => ({
+            ...old,
+            index,
+        }));
+
         return state.history[index];
-    }, [state.history]);
+    }, [state.index, state.history]);
 
     const { history, index } = state;
     const snapshot: Snapshot | null = history[index];
@@ -82,10 +80,10 @@ const useOperationsHistory = ({ postKeydownAction }: Props) => {
             if (e.ctrlKey || e.metaKey) {
                 if (e.key.toLowerCase() === 'z') {
                     const prevSnapshot = undo();
-                    postKeydownAction(prevSnapshot);
+                    if (prevSnapshot) postKeydownAction(prevSnapshot);
                 } else if (e.key.toLowerCase() === 'y') {
                     const nextSnapshot = redo();
-                    postKeydownAction(nextSnapshot);
+                    if (nextSnapshot) postKeydownAction(nextSnapshot);
                 }
             }
         };
