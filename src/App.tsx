@@ -51,6 +51,7 @@ import TresholdingTool from './components/TresholdingTool';
 import LogTransformTool from './components/LogTransformTool';
 import HSLTool from './components/HSLTool';
 import useHistory from './hooks/useOperationsHistory';
+import ConfirmationModal from './components/ConfirmationModal';
 
 const HEADER_HEIGHT = 86;
 
@@ -67,6 +68,7 @@ function App() {
         typeof getAspectRatio
     > | null>(null);
     const [filename, setFilename] = useState('');
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     const handleDownload = useCallback(() => {
@@ -402,6 +404,7 @@ function App() {
                                         : 'absolute',
                                     overflow: 'hidden',
                                 }}
+                                data-test-name="app-canvas"
                             ></canvas>
                             {isLoading && (
                                 <Box pos="absolute" inset="0">
@@ -462,35 +465,37 @@ function App() {
                         Image
                     </Heading>
                     {image == null && (
-                        <Text
-                            maxWidth="300px"
-                            color={COLOR.TEXT}
-                            fontSize="0.8em"
-                        >
-                            Don't worry - your image stays on your device. All
-                            processing happens right in your browser.
-                        </Text>
+                        <>
+                            <Text
+                                maxWidth="300px"
+                                color={COLOR.TEXT}
+                                fontSize="0.8em"
+                            >
+                                Don't worry - your image stays on your device.
+                                All processing happens right in your browser.
+                            </Text>
+                            <HStack>
+                                <FileUpload.Root
+                                    width="max-content"
+                                    accept={[
+                                        'image/png',
+                                        'image/jpeg',
+                                        'image/webp',
+                                        'image/heic',
+                                    ]}
+                                    onFileChange={handleOnFileChange}
+                                >
+                                    <FileUpload.HiddenInput data-test-name="upload-file-input" />
+                                    <FileUpload.Trigger asChild>
+                                        <Button variant="surface" size="sm">
+                                            <HiUpload /> Load image
+                                        </Button>
+                                    </FileUpload.Trigger>
+                                </FileUpload.Root>
+                                {error ? <Text color="red">{error}</Text> : ''}
+                            </HStack>
+                        </>
                     )}
-                    <HStack>
-                        <FileUpload.Root
-                            width="max-content"
-                            accept={[
-                                'image/png',
-                                'image/jpeg',
-                                'image/webp',
-                                'image/heic',
-                            ]}
-                            onFileChange={handleOnFileChange}
-                        >
-                            <FileUpload.HiddenInput data-test-name="upload-file-input" />
-                            <FileUpload.Trigger asChild>
-                                <Button variant="surface" size="sm">
-                                    <HiUpload /> Load image
-                                </Button>
-                            </FileUpload.Trigger>
-                        </FileUpload.Root>
-                        {error ? <Text color="red">{error}</Text> : ''}
-                    </HStack>
                     {image && (
                         <>
                             <HStack>
@@ -544,7 +549,9 @@ function App() {
                                     <IconButton
                                         variant="surface"
                                         size="sm"
-                                        onClick={history.clear}
+                                        onClick={() =>
+                                            setIsConfirmModalOpen(true)
+                                        }
                                         data-test-name="delete-image"
                                     >
                                         <GoTrash />
@@ -879,6 +886,14 @@ function App() {
                     </Link>
                 </HStack>
             </Box>
+            <ConfirmationModal
+                open={isConfirmModalOpen}
+                setOpen={setIsConfirmModalOpen}
+                confirmButtonText="Delete image"
+                title="Delete this image?"
+                description="This will permanently delete the current image and its operation history. This action cannot be undone."
+                onConfirm={history.clear}
+            />
         </Box>
     );
 }

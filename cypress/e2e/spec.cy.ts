@@ -10,6 +10,20 @@ describe('page', () => {
     it('load and downloads image', () => {
         cy.downloadAndMatchSnapshot('test-default.png');
     });
+    it('load image button is not visible once user loaded the image', () => {
+        cy.get('[data-test-name="upload-file-input"]').should('not.exist');
+    });
+    it('delete image button shows the confirmation modal and deletes the image', () => {
+        cy.get('canvas[data-test-name="app-canvas"]').should('exist');
+        cy.get('button[data-test-name="confirm-modal-confirm"]').should(
+            'not.exist'
+        );
+
+        cy.get('button[data-test-name="delete-image"]').click();
+        cy.get('button[data-test-name="confirm-modal-confirm"]').click();
+        cy.get('canvas[data-test-name="app-canvas"]').should('not.exist');
+        cy.get('[data-test-name="upload-file-input"]').should('exist');
+    });
     it('allows to change number of rows and columns', () => {
         cy.updateNumberInputWithLabel('Number of rows', 10);
         cy.updateNumberInputWithLabel('Number of columns', 3);
@@ -58,7 +72,7 @@ describe('page', () => {
     it('increase grid button works as expected when cell aspect ratio is 1:1', () => {
         cy.get('[data-test-name="cell-aspect-ratio"]').should(
             'have.text',
-            '1:1',
+            '1:1'
         );
         cy.get('[data-test-name="increase-grid"]').click();
         cy.downloadAndMatchSnapshot('test-increase-grid.png');
@@ -66,7 +80,7 @@ describe('page', () => {
     it('decrease grid button works as expected when cell aspect ratio is 1:1', () => {
         cy.get('[data-test-name="cell-aspect-ratio"]').should(
             'have.text',
-            '1:1',
+            '1:1'
         );
         cy.get('[data-test-name="decrease-grid"]').click();
         cy.downloadAndMatchSnapshot('test-decrease-grid.png');
@@ -93,7 +107,7 @@ describe('page', () => {
                 (value) => {
                     expect(value).not.to.eq(lastRow);
                     lastRow = value;
-                },
+                }
             );
             ratioEl.should('have.text', '10:21');
         }
@@ -104,7 +118,7 @@ describe('page', () => {
                 (value) => {
                     expect(value).not.to.eq(lastRow);
                     lastRow = value;
-                },
+                }
             );
             ratioEl.should('have.text', '10:21');
         }
