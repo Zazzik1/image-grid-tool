@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-type Snapshot = {
+export type Snapshot = {
     toolName: string;
     image: HTMLImageElement;
     date: Date;
@@ -11,7 +11,11 @@ type State = {
     history: Snapshot[];
 };
 
-const useOperationsHistory = () => {
+type Props = {
+    postKeydownAction: (snapshot: Snapshot) => void;
+};
+
+const useOperationsHistory = ({ postKeydownAction }: Props) => {
     const [state, setState] = useState<State>({
         index: 0,
         history: [],
@@ -47,18 +51,26 @@ const useOperationsHistory = () => {
     }, []);
 
     const undo = useCallback(() => {
+        const index = Math.max(0, state.index - 1);
+
         setState((old) => ({
             ...old,
-            index: Math.max(0, old.index - 1),
+            index,
         }));
-    }, []);
+
+        return state.history[index];
+    }, [state.index, state.history]);
 
     const redo = useCallback(() => {
+        const index = Math.min(state.index + 1, state.history.length - 1);
+
         setState((old) => ({
             ...old,
-            index: Math.min(old.index + 1, old.history.length - 1),
+            index,
         }));
-    }, []);
+
+        return state.history[index];
+    }, [state.index, state.history]);
 
     const { history, index } = state;
     const snapshot: Snapshot | null = history[index];
@@ -67,9 +79,11 @@ const useOperationsHistory = () => {
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.ctrlKey || e.metaKey) {
                 if (e.key.toLowerCase() === 'z') {
-                    undo();
+                    const prevSnapshot = undo();
+                    if (prevSnapshot) postKeydownAction(prevSnapshot);
                 } else if (e.key.toLowerCase() === 'y') {
-                    redo();
+                    const nextSnapshot = redo();
+                    if (nextSnapshot) postKeydownAction(nextSnapshot);
                 }
             }
         };
@@ -77,7 +91,7 @@ const useOperationsHistory = () => {
         return () => {
             document.removeEventListener('keydown', onKeyDown);
         };
-    }, [undo, redo]);
+    }, [undo, redo, postKeydownAction]);
 
     return {
         clear,
