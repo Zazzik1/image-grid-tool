@@ -26,7 +26,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FaGithub } from 'react-icons/fa';
 import { FaMinus, FaPlus } from 'react-icons/fa6';
-import { HiDownload, HiUpload } from 'react-icons/hi';
+import { HiUpload } from 'react-icons/hi';
 import {
     AspectRatio,
     getAspectRatio,
@@ -52,6 +52,7 @@ import LogTransformTool from './components/LogTransformTool';
 import HSLTool from './components/HSLTool';
 import useHistory from './hooks/useOperationsHistory';
 import ConfirmationModal from './components/ConfirmationModal';
+import ExportModal from './components/Export/ExportModal';
 
 const HEADER_HEIGHT = 86;
 
@@ -70,14 +71,6 @@ function App() {
     const [filename, setFilename] = useState('');
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-
-    const handleDownload = useCallback(() => {
-        if (!canvasRef.current) return;
-        const link = document.createElement('a');
-        link.download = `${filename}.png`;
-        link.href = canvasRef.current.toDataURL('image/png', 1.0);
-        link.click();
-    }, [filename]);
 
     const suggestGrids = useCallback((img: HTMLImageElement) => {
         const {
@@ -360,15 +353,11 @@ function App() {
                         A simple way to add grids to images.
                     </Text>
                 </Box>
-                <Button
-                    colorPalette="blue"
-                    onClick={handleDownload}
+                <ExportModal
+                    canvasRef={canvasRef}
                     disabled={!image}
-                    width="max-content"
-                >
-                    <HiDownload />
-                    Export
-                </Button>
+                    filename={filename}
+                />
             </HStack>
             <Box
                 display="flex"
