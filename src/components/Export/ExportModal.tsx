@@ -121,7 +121,7 @@ const ExportModal = ({ filename, disabled, canvasRef }: Props) => {
             duration: 2000,
             description: 'Your image is ready to paste.',
         });
-    }, []);
+    }, [canvasRef]);
 
     const handleCopyCodeToClipboard = useCallback(async () => {
         const canvas = canvasRef.current;
@@ -144,7 +144,7 @@ const ExportModal = ({ filename, disabled, canvasRef }: Props) => {
             duration: 2000,
             description: 'Your image has been saved to clipboard.',
         });
-    }, [quality]);
+    }, [quality, canvasRef]);
 
     // TODO: add support for share API
 
@@ -177,6 +177,7 @@ const ExportModal = ({ filename, disabled, canvasRef }: Props) => {
                     colorPalette="blue"
                     disabled={disabled}
                     width="max-content"
+                    data-test-name="export-modal-open"
                 >
                     <HiDownload />
                     Export

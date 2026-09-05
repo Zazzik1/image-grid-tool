@@ -7,7 +7,7 @@ declare global {
             loadImage(name: string): Chainable;
             downloadAndMatchSnapshot(
                 snapshotName: string,
-                downloadName?: string,
+                downloadName?: string
             ): Chainable;
             clearDownloads(): Chainable;
             updateNumberInputWithLabel(label: string, value: number): Chainable;
@@ -20,7 +20,7 @@ declare global {
 Cypress.Commands.add('loadImage', (name: string) => {
     cy.get('input[type="file"][data-test-name="upload-file-input"]').selectFile(
         `cypress/fixtures/${name}`,
-        { force: true },
+        { force: true }
     );
 });
 
@@ -28,9 +28,14 @@ Cypress.Commands.add(
     'downloadAndMatchSnapshot',
     (snapshotName: string, downloadName: string = 'test-GRID.png') => {
         cy.get('[data-test-name="canvas-spinner"]', { timeout: 15000 }).should(
-            'not.exist',
+            'not.exist'
         );
-        cy.get('button').contains('Export').click();
+        cy.get('button[data-test-name="export-modal-open"]')
+            .contains('Export')
+            .click();
+        cy.get('button[data-test-name="export-modal-confirm"]')
+            .contains('Download image')
+            .click();
 
         // wait until files exist
         cy.readFile(`cypress/downloads/${downloadName}`, 'binary', {
@@ -44,7 +49,7 @@ Cypress.Commands.add(
             actual: `cypress/downloads/${downloadName}`,
             expected: `cypress/snapshots/${snapshotName}`,
         }).should('eq', true);
-    },
+    }
 );
 
 Cypress.Commands.add('clearDownloads', () => {
@@ -73,7 +78,7 @@ Cypress.Commands.add(
                     .type(`{selectAll}${value}`, { delay: 50 })
                     .blur();
             });
-    },
+    }
 );
 
 Cypress.Commands.add(
@@ -86,7 +91,7 @@ Cypress.Commands.add(
                 cy.wrap($checkbox).click();
             }
         });
-    },
+    }
 );
 
 export {};
