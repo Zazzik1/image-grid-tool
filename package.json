@@ -13,7 +13,8 @@
         "test:ci": "vitest run",
         "test:cypress:run": "cypress run --browser chrome",
         "test:cypress:open": "cypress open",
-        "prepare": "husky"
+        "prepare": "husky",
+        "format": "prettier . --write"
     },
     "dependencies": {
         "@chakra-ui/react": "^3.27.0",

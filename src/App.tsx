@@ -11,8 +11,6 @@ import {
     HStack,
     Icon,
     IconButton,
-    Input,
-    InputGroup,
     Link,
     NumberInput,
     parseColor,
@@ -316,12 +314,6 @@ function App() {
         );
     }, [image, handleToolSave]);
 
-    const handleFilenameChange = useCallback<
-        React.ChangeEventHandler<HTMLInputElement>
-    >((e) => {
-        setFilename(e.target.value);
-    }, []);
-
     return (
         <Box
             display="flex"
@@ -570,15 +562,6 @@ function App() {
                                     }
                                 />
                             </HStack>
-
-                            <InputGroup endAddon=".PNG" marginBottom="4px">
-                                <Input
-                                    width="100%"
-                                    placeholder="File name"
-                                    value={filename}
-                                    onChange={handleFilenameChange}
-                                />
-                            </InputGroup>
 
                             <HStack>
                                 <Stat.Root>
