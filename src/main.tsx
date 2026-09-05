@@ -3,11 +3,13 @@ import { createRoot } from 'react-dom/client';
 import { Provider } from '@/components/ui/provider';
 import App from './App.tsx';
 import './index.css';
+import { Toaster } from './components/ui/toaster.tsx';
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <Provider forcedTheme="dark">
             <App />
+            <Toaster />
         </Provider>
-    </StrictMode>,
+    </StrictMode>
 );
